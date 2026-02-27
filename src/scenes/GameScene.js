@@ -51,20 +51,23 @@ export class GameScene extends Phaser.Scene {
 
     this.createHud();
 
-    const connectedPad = this.input.gamepad?.gamepads?.find((pad) => pad && pad.connected);
-    if (connectedPad) {
-      this.pad = connectedPad;
-    }
-    this.input.gamepad.once('connected', (pad) => {
-      this.pad = pad;
-      this.updateHud();
-    });
-    this.input.gamepad.on('disconnected', (pad) => {
-      if (this.pad?.id === pad.id) {
-        this.pad = this.input.gamepad?.gamepads?.find((nextPad) => nextPad && nextPad.connected) ?? null;
-        this.updateHud();
+    const gamepadPlugin = this.input.gamepad;
+    if (gamepadPlugin) {
+      const connectedPad = gamepadPlugin.gamepads?.find((pad) => pad && pad.connected);
+      if (connectedPad) {
+        this.pad = connectedPad;
       }
-    });
+      gamepadPlugin.once('connected', (pad) => {
+        this.pad = pad;
+        this.updateHud();
+      });
+      gamepadPlugin.on('disconnected', (pad) => {
+        if (this.pad?.id === pad.id) {
+          this.pad = gamepadPlugin.gamepads?.find((nextPad) => nextPad && nextPad.connected) ?? null;
+          this.updateHud();
+        }
+      });
+    }
 
     this.roomLoader = new RoomLoader(this, getRoomById, this.gameState);
     this.roomLoader.loadRoom('room_01', 'start');
