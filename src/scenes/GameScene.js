@@ -18,9 +18,6 @@ export class GameScene extends Phaser.Scene {
   }
 
   create() {
-    this.add.image(0, 0, 'tiles_biolab')
-  .setOrigin(0, 0)
-  .setScale(2);
     this.gameState = new GameState();
 
     this.cursors = this.input.keyboard.createCursorKeys();

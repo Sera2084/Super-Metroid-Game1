@@ -13,7 +13,8 @@ export class RoomLoader {
   }
 
   clearCurrentRoom() {
-    this.scene.tileGroup?.clear(true, true);
+    this.scene.roomCollisionLayer?.destroy();
+    this.scene.roomTilemap?.destroy();
     this.scene.enemyGroup?.clear(true, true);
     this.scene.doorZones?.clear(true, true);
     this.scene.itemSprites?.clear(true, true);
@@ -43,16 +44,21 @@ export class RoomLoader {
     this.scene.doorZones = this.scene.add.group();
     this.scene.itemSprites = this.scene.physics.add.staticGroup();
 
-    for (let y = 0; y < room.height; y += 1) {
-      for (let x = 0; x < room.width; x += 1) {
-        if (room.collisionGrid[y][x] === 1) {
-          const tile = this.scene.tileGroup
-            .create(x * TILE_SIZE + TILE_SIZE / 2, y * TILE_SIZE + TILE_SIZE / 2, 'tile-solid')
-            .setOrigin(0.5);
-          tile.refreshBody();
-        }
-      }
+    const collisionData = room.collisionGrid.map((row) => row.map((cell) => (cell === 1 ? 0 : -1)));
+    const tilemap = this.scene.make.tilemap({
+      data: collisionData,
+      tileWidth: TILE_SIZE,
+      tileHeight: TILE_SIZE
+    });
+    const biolabTileset = tilemap.addTilesetImage('tiles_biolab');
+    if (!biolabTileset) {
+      throw new Error('Tileset "tiles_biolab" konnte nicht erstellt werden.');
     }
+    const collisionLayer = tilemap.createLayer(0, biolabTileset, 0, 0);
+    collisionLayer.setCollision([0]);
+
+    this.scene.roomTilemap = tilemap;
+    this.scene.roomCollisionLayer = collisionLayer;
 
     this.scene.physics.world.setBounds(0, 0, room.width * TILE_SIZE, room.height * TILE_SIZE);
     this.scene.cameras.main.setBounds(0, 0, room.width * TILE_SIZE, room.height * TILE_SIZE);
@@ -91,8 +97,8 @@ export class RoomLoader {
       sprite.setData('item', item);
     });
 
-    this.scene.playerTileCollider = this.scene.physics.add.collider(this.scene.player, this.scene.tileGroup);
-    this.scene.enemyTileCollider = this.scene.physics.add.collider(this.scene.enemyGroup, this.scene.tileGroup);
+    this.scene.playerTileCollider = this.scene.physics.add.collider(this.scene.player, this.scene.roomCollisionLayer);
+    this.scene.enemyTileCollider = this.scene.physics.add.collider(this.scene.enemyGroup, this.scene.roomCollisionLayer);
     this.scene.playerEnemyCollider = this.scene.physics.add.overlap(this.scene.player, this.scene.enemyGroup, () => {
       this.scene.damagePlayer(1);
     });
@@ -104,9 +110,13 @@ export class RoomLoader {
         enemy.hurt();
       }
     );
-    this.scene.bulletTileCollider = this.scene.physics.add.collider(this.scene.bullets, this.scene.tileGroup, (bullet) => {
-      bullet.disableBody(true, true);
-    });
+    this.scene.bulletTileCollider = this.scene.physics.add.collider(
+      this.scene.bullets,
+      this.scene.roomCollisionLayer,
+      (bullet) => {
+        bullet.disableBody(true, true);
+      }
+    );
 
     this.scene.playerDoorOverlap = this.scene.physics.add.overlap(this.scene.player, this.scene.doorZones, (_, zone) => {
       const door = zone.getData('door');
