@@ -6,10 +6,17 @@ export class BootScene extends Phaser.Scene {
   }
 
 preload() {
-    this.load.image(
-        'tiles_biolab',
-        '/assets/tilesets/alien_biolab_tileset.png'
-    );
+     const base = import.meta.env.BASE_URL;
+
+  this.load.spritesheet(
+    'tiles_biolab',
+    `${base}assets/tilesets/alien_biolab_tileset.png`,
+    {
+      frameWidth: 16,
+      frameHeight: 16
+    }
+  );
+}
 }
 
   create() {
