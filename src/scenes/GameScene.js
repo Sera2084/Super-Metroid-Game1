@@ -44,16 +44,15 @@ export class GameScene extends Phaser.Scene {
 
     this.input.keyboard.on('keydown-J', () => this.tryShoot());
 
-    this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
-    this.cameras.main.setRoundPixels(true);
-
     this.roomLoader = new RoomLoader(this, getRoomById, this.gameState);
     this.roomLoader.loadRoom('room_01', 'start');
+    this.cameras.main.centerOn(this.player.x, this.player.y);
+    this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
+    this.cameras.main.setRoundPixels(true);
 
     this.applyGameStateToPlayer();
     this.updateHud();
 
-    this.scale.on('resize', this.handleResize, this);
   }
 
   createHud() {
@@ -76,10 +75,6 @@ export class GameScene extends Phaser.Scene {
     this.mapText = this.add
       .text(16, 110, '', { fontFamily: 'monospace', fontSize: '13px', color: '#94f0c0' })
       .setScrollFactor(0);
-  }
-
-  handleResize(gameSize) {
-    this.cameras.main.setSize(gameSize.width, gameSize.height);
   }
 
   /**
