@@ -5,6 +5,13 @@ export class BootScene extends Phaser.Scene {
     super('BootScene');
   }
 
+preload() {
+    this.load.image(
+        'tiles_biolab',
+        '/assets/tilesets/alien_biolab_tileset.png'
+    );
+}
+
   create() {
     this.createTextures();
     this.scene.start('GameScene');
