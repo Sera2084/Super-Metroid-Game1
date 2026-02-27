@@ -7,6 +7,15 @@ import { getRegisteredRoomCount, getRoomById, MAX_SUPPORTED_ROOMS } from '../roo
 export class GameScene extends Phaser.Scene {
   constructor() {
     super('GameScene');
+    this.pad = null;
+    this.gamepadDeadzone = 0.25;
+    this.gamepadButtons = {
+      jump: 0,
+      shoot: 2,
+      dpadLeft: 14,
+      dpadRight: 15,
+      stickX: 0
+    };
     this.playerState = {
       hp: 6,
       maxHp: 6,
@@ -42,6 +51,21 @@ export class GameScene extends Phaser.Scene {
 
     this.createHud();
 
+    const connectedPad = this.input.gamepad?.gamepads?.find((pad) => pad && pad.connected);
+    if (connectedPad) {
+      this.pad = connectedPad;
+    }
+    this.input.gamepad.once('connected', (pad) => {
+      this.pad = pad;
+      this.updateHud();
+    });
+    this.input.gamepad.on('disconnected', (pad) => {
+      if (this.pad?.id === pad.id) {
+        this.pad = this.input.gamepad?.gamepads?.find((nextPad) => nextPad && nextPad.connected) ?? null;
+        this.updateHud();
+      }
+    });
+
     this.input.keyboard.on('keydown-J', () => this.tryShoot());
 
     this.roomLoader = new RoomLoader(this, getRoomById, this.gameState);
@@ -75,6 +99,37 @@ export class GameScene extends Phaser.Scene {
     this.mapText = this.add
       .text(16, 110, '', { fontFamily: 'monospace', fontSize: '13px', color: '#94f0c0' })
       .setScrollFactor(0);
+
+    this.gamepadText = this.add
+      .text(16, 132, '', { fontFamily: 'monospace', fontSize: '12px', color: '#9ec5ff' })
+      .setScrollFactor(0);
+  }
+
+  getMoveX() {
+    if (!this.pad || !this.pad.connected) return 0;
+
+    const leftPressed =
+      this.pad.left?.pressed || this.pad.buttons?.[this.gamepadButtons.dpadLeft]?.pressed || false;
+    const rightPressed =
+      this.pad.right?.pressed || this.pad.buttons?.[this.gamepadButtons.dpadRight]?.pressed || false;
+
+    if (leftPressed && !rightPressed) return -1;
+    if (rightPressed && !leftPressed) return 1;
+
+    const axis = this.pad.axes?.[this.gamepadButtons.stickX];
+    const axisX = axis?.getValue ? axis.getValue() : axis?.value ?? 0;
+    if (Math.abs(axisX) < this.gamepadDeadzone) return 0;
+    return axisX > 0 ? 1 : -1;
+  }
+
+  isJumpJustDown() {
+    const jumpButton = this.pad?.buttons?.[this.gamepadButtons.jump];
+    return Boolean(jumpButton && Phaser.Input.Gamepad.JustDown(jumpButton));
+  }
+
+  isShootJustDown() {
+    const shootButton = this.pad?.buttons?.[this.gamepadButtons.shoot];
+    return Boolean(shootButton && Phaser.Input.Gamepad.JustDown(shootButton));
   }
 
   /**
@@ -175,6 +230,10 @@ export class GameScene extends Phaser.Scene {
     );
     this.mapText.setText(
       `Minimap: ${visitedCount}/${getRegisteredRoomCount()} besucht (System bereit für ${MAX_SUPPORTED_ROOMS}+ Räume)`
+    );
+    const status = this.pad && this.pad.connected ? 'connected' : 'disconnected';
+    this.gamepadText.setText(
+      `Gamepad: ${status} (B:${this.gamepadButtons.jump} Y:${this.gamepadButtons.shoot} D:${this.gamepadButtons.dpadLeft}/${this.gamepadButtons.dpadRight} AX:${this.gamepadButtons.stickX})`
     );
   }
 
