@@ -5,19 +5,15 @@ export class BootScene extends Phaser.Scene {
     super('BootScene');
   }
 
-preload() {
-     const base = import.meta.env.BASE_URL;
+  preload() {
+    const base = import.meta.env.BASE_URL;
 
-  this.load.spritesheet(
-    'tiles_biolab',
-    `${base}assets/tilesets/alien_biolab_tileset.png`,
-    {
-      frameWidth: 16,
-      frameHeight: 16
-    }
-  );
-}
-}
+    this.load.spritesheet(
+      'tiles_biolab',
+      `${base}assets/tilesets/alien_biolab_tileset.png`,
+      { frameWidth: 16, frameHeight: 16 }
+    );
+  }
 
   create() {
     this.createTextures();
@@ -66,6 +62,5 @@ preload() {
     g.fillStyle(0xb2ebf2, 1);
     g.fillRect(2, 2, 8, 8);
     g.generateTexture('item-pickup', 12, 12);
-
   }
 }
