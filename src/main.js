@@ -5,7 +5,7 @@ import { GameScene } from './scenes/GameScene';
 const config = {
   type: Phaser.AUTO,
   parent: 'app',
-  backgroundColor: '#0b0f1a',
+  backgroundColor: '#000000',
   physics: {
     default: 'arcade',
     arcade: {
@@ -14,10 +14,10 @@ const config = {
     }
   },
   scale: {
-    mode: Phaser.Scale.RESIZE,
+    mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
-    width: window.innerWidth,
-    height: window.innerHeight
+    width: 400,
+    height: 225
   },
   pixelArt: true,
   roundPixels: true,
