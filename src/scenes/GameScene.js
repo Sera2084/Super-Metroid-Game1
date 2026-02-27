@@ -66,8 +66,6 @@ export class GameScene extends Phaser.Scene {
       }
     });
 
-    this.input.keyboard.on('keydown-J', () => this.tryShoot());
-
     this.roomLoader = new RoomLoader(this, getRoomById, this.gameState);
     this.roomLoader.loadRoom('room_01', 'start');
     this.cameras.main.centerOn(this.player.x, this.player.y);
@@ -189,19 +187,19 @@ export class GameScene extends Phaser.Scene {
   handleMovement() {
     const body = this.player.body;
     const moveSpeed = 125;
+    const keyboardMoveX = (this.keys.right.isDown ? 1 : 0) - (this.keys.left.isDown ? 1 : 0);
+    const gamepadMoveX = this.getMoveX();
+    const moveX = gamepadMoveX !== 0 ? gamepadMoveX : keyboardMoveX;
 
-    if (this.keys.left.isDown) {
-      this.player.setVelocityX(-moveSpeed);
-      this.playerState.facing = -1;
-    } else if (this.keys.right.isDown) {
-      this.player.setVelocityX(moveSpeed);
-      this.playerState.facing = 1;
-    } else {
-      this.player.setVelocityX(0);
+    this.player.setVelocityX(moveX * moveSpeed);
+    if (moveX !== 0) {
+      this.playerState.facing = moveX > 0 ? 1 : -1;
     }
 
     const jumpPressed =
-      Phaser.Input.Keyboard.JustDown(this.keys.jump) || Phaser.Input.Keyboard.JustDown(this.cursors.space);
+      Phaser.Input.Keyboard.JustDown(this.keys.jump) ||
+      Phaser.Input.Keyboard.JustDown(this.cursors.space) ||
+      this.isJumpJustDown();
     if (jumpPressed && body.blocked.down) {
       this.player.setVelocityY(-340);
     }
@@ -239,6 +237,10 @@ export class GameScene extends Phaser.Scene {
 
   update() {
     this.handleMovement();
+    const shootPressed = Phaser.Input.Keyboard.JustDown(this.keys.shoot) || this.isShootJustDown();
+    if (shootPressed) {
+      this.tryShoot();
+    }
 
     if (this.player.y > this.physics.world.bounds.height + 60) {
       this.damagePlayer(99);
