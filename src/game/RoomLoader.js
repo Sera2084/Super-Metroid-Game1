@@ -13,24 +13,32 @@ export class RoomLoader {
   }
 
   clearCurrentRoom() {
+    const removeCollider = (key) => {
+      const collider = this.scene[key];
+      if (collider) {
+        this.scene.physics.world.removeCollider(collider);
+        this.scene[key] = null;
+      }
+    };
+
+    removeCollider('playerTileCollider');
+    removeCollider('enemyTileCollider');
+    removeCollider('playerEnemyCollider');
+    removeCollider('playerDoorOverlap');
+    removeCollider('playerItemOverlap');
+    removeCollider('bulletEnemyOverlap');
+    removeCollider('bulletTileCollider');
+
     this.scene.roomCollisionLayer?.destroy();
     this.scene.roomTilemap?.destroy();
     this.scene.enemyGroup?.clear(true, true);
     this.scene.doorZones?.clear(true, true);
     this.scene.itemSprites?.clear(true, true);
-
-    this.scene.playerTileCollider?.destroy();
-    this.scene.enemyTileCollider?.destroy();
-    this.scene.playerEnemyCollider?.destroy();
-    this.scene.playerDoorOverlap?.destroy();
-    this.scene.playerItemOverlap?.destroy();
-    this.scene.bulletEnemyOverlap?.destroy();
-    this.scene.bulletTileCollider?.destroy();
   }
 
   loadRoom(roomId, spawnId = 'start') {
     if (this.scene.bulletTileCollider) {
-      this.scene.bulletTileCollider.destroy();
+      this.scene.physics.world.removeCollider(this.scene.bulletTileCollider);
       this.scene.bulletTileCollider = null;
     }
 
@@ -60,7 +68,7 @@ export class RoomLoader {
       throw new Error('Tileset "tiles_biolab" konnte nicht erstellt werden.');
     }
     const collisionLayer = tilemap.createLayer(0, biolabTileset, 0, 0);
-    collisionLayer.setCollisionByExclusion([-1]);
+    collisionLayer.setCollisionByExclusion([-1], true);
 
     this.scene.roomTilemap = tilemap;
     this.scene.roomCollisionLayer = collisionLayer;
@@ -70,7 +78,7 @@ export class RoomLoader {
 
     const spawn = room.spawnPoints[spawnId] ?? room.spawnPoints.start;
     const spawnPx = tileToPixel(spawn.tileX, spawn.tileY);
-    this.scene.player.setPosition(spawnPx.x, spawnPx.y - 32);
+    this.scene.player.setPosition(spawnPx.x, spawnPx.y - 40);
 
     room.enemySpawns.forEach((spawnDef) => {
       const start = tileToPixel(spawnDef.tileX, spawnDef.tileY);
@@ -116,7 +124,7 @@ export class RoomLoader {
       }
     );
     if (this.scene.bulletTileCollider) {
-      this.scene.bulletTileCollider.destroy();
+      this.scene.physics.world.removeCollider(this.scene.bulletTileCollider);
       this.scene.bulletTileCollider = null;
     }
     this.scene.bulletTileCollider = this.scene.physics.add.overlap(

@@ -48,11 +48,8 @@ export class GameScene extends Phaser.Scene {
     this.player = this.physics.add.sprite(64, 64, 'player', 1);
     this.player.setOrigin(0.5, 1);
     this.player.setScale(0.07);
-    this.player.body.setSize(24, 40);
-    this.player.body.setOffset(
-      Math.round((this.player.displayWidth - 24) / 2),
-      Math.round(this.player.displayHeight - 40)
-    );
+    this.player.body.setSize(24, 40, false);
+    this.player.body.setOffset((this.player.width - 24) / 2, this.player.height - 40);
     this.player.setFrame(0);
     this.player.setFlipX(false);
     this.player.setCollideWorldBounds(true);
@@ -91,7 +88,6 @@ export class GameScene extends Phaser.Scene {
 
     this.roomLoader = new RoomLoader(this, getRoomById, this.gameState);
     this.roomLoader.loadRoom('room_01', 'start');
-    this.refreshPlayerTileCollider();
     this.updateCameraZoomToFit();
     this.cameras.main.centerOn(this.player.x, this.player.y);
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
@@ -124,8 +120,10 @@ export class GameScene extends Phaser.Scene {
   }
 
   refreshPlayerTileCollider() {
-    this.playerTileCollider?.destroy();
-    this.playerTileCollider = null;
+    if (this.playerTileCollider) {
+      this.physics.world.removeCollider(this.playerTileCollider);
+      this.playerTileCollider = null;
+    }
     if (this.player && this.roomCollisionLayer) {
       this.playerTileCollider = this.physics.add.collider(this.player, this.roomCollisionLayer);
     }
