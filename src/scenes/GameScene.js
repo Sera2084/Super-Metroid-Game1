@@ -49,27 +49,6 @@ export class GameScene extends Phaser.Scene {
     this.player.setOrigin(0.5, 1);
     this.player.setScale(0.07);
     this.alignBodyFeet(this.player, 26, 44, 5);
-    const p = this.player;
-    console.log(
-      '[PLAYER]',
-      'y',
-      p.y,
-      'body.bottom',
-      p.body.bottom,
-      'gapWorld(body.bottom - y)=',
-      p.body.bottom - p.y,
-      'scale',
-      p.scaleX,
-      'frame',
-      p.frame?.width,
-      p.frame?.height,
-      'src',
-      p.frame?.sourceSizeW,
-      p.frame?.sourceSizeH,
-      'trim',
-      p.frame?.spriteSourceSizeX,
-      p.frame?.spriteSourceSizeY
-    );
     this.player.setFrame(0);
     this.player.setFlipX(false);
     this.player.setCollideWorldBounds(true);
@@ -177,9 +156,9 @@ export class GameScene extends Phaser.Scene {
     body.setOffset(offX, offY);
   }
 
-  snapPlayerToGround(maxScanPx = 256) {
-    if (!this.roomCollisionLayer || !this.player?.body) return;
-    const body = this.player.body;
+  snapSpriteToGround(sprite, maxScanPx = 256) {
+    if (!this.roomCollisionLayer || !sprite?.body) return;
+    const body = sprite.body;
     const x = body.center.x;
     const startY = body.top - 64;
     const step = 4;
@@ -190,11 +169,15 @@ export class GameScene extends Phaser.Scene {
       if (tile && tile.collides) {
         const topY = tile.pixelY;
         const delta = topY - body.bottom;
-        this.player.y += delta;
+        sprite.y += delta;
         body.velocity.y = 0;
         return;
       }
     }
+  }
+
+  snapPlayerToGround(maxScanPx = 256) {
+    this.snapSpriteToGround(this.player, maxScanPx);
   }
 
   createHud() {

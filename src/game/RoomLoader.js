@@ -93,27 +93,6 @@ export class RoomLoader {
       const enemyScale = Math.max(scaleFromTile, scaleFromPlayer);
       enemy.setScale(enemyScale);
       this.scene.alignBodyFeet?.(enemy, 18, 14, 0);
-      const e = enemy;
-      console.log(
-        '[ENEMY ]',
-        'y',
-        e.y,
-        'body.bottom',
-        e.body.bottom,
-        'gapWorld(body.bottom - y)=',
-        e.body.bottom - e.y,
-        'scale',
-        e.scaleX,
-        'frame',
-        e.frame?.width,
-        e.frame?.height,
-        'src',
-        e.frame?.sourceSizeW,
-        e.frame?.sourceSizeH,
-        'trim',
-        e.frame?.spriteSourceSizeX,
-        e.frame?.spriteSourceSizeY
-      );
       this.scene.enemyGroup.add(enemy);
     });
 
@@ -142,6 +121,11 @@ export class RoomLoader {
     this.scene.refreshPlayerTileCollider?.();
     this.scene.snapPlayerToGround?.();
     this.scene.enemyTileCollider = this.scene.physics.add.collider(this.scene.enemyGroup, this.scene.roomCollisionLayer);
+    this.scene.enemyGroup.children.iterate((enemy) => {
+      if (!enemy?.body) return;
+      this.scene.snapSpriteToGround?.(enemy, 192);
+      enemy.body.velocity.y = 0;
+    });
     this.scene.playerEnemyCollider = this.scene.physics.add.overlap(this.scene.player, this.scene.enemyGroup, (player, enemy) => {
       if (this.scene.onPlayerTouchEnemy) {
         this.scene.onPlayerTouchEnemy(player, enemy);
