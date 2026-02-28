@@ -69,13 +69,28 @@ export class GameScene extends Phaser.Scene {
 
     this.roomLoader = new RoomLoader(this, getRoomById, this.gameState);
     this.roomLoader.loadRoom('room_01', 'start');
+    this.updateCameraZoomToFit();
     this.cameras.main.centerOn(this.player.x, this.player.y);
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
     this.cameras.main.setRoundPixels(true);
+    this.scale.on('resize', this.updateCameraZoomToFit, this);
 
     this.applyGameStateToPlayer();
     this.updateHud();
 
+  }
+
+  updateCameraZoomToFit() {
+    const TILE_SIZE = 16;
+    const TARGET_TILES_X = 28;
+    const TARGET_TILES_Y = 16;
+    const MAX_ZOOM = 4;
+    const visibleWidth = this.scale.gameSize.width;
+    const visibleHeight = this.scale.gameSize.height;
+    const zoomX = Math.floor(visibleWidth / (TARGET_TILES_X * TILE_SIZE));
+    const zoomY = Math.floor(visibleHeight / (TARGET_TILES_Y * TILE_SIZE));
+    const nextZoom = Phaser.Math.Clamp(Math.min(zoomX, zoomY), 1, MAX_ZOOM);
+    this.cameras.main.setZoom(nextZoom);
   }
 
   createHud() {
