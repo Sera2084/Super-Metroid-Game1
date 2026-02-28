@@ -162,19 +162,27 @@ export class GameScene extends Phaser.Scene {
 
   setWorldHitbox(sprite, targetWWorld, targetHWorld) {
     if (!sprite?.body) return;
+
     sprite.setOrigin(0.5, 1);
-    const scaleX = Math.abs(sprite.scaleX || 1);
-    const scaleY = Math.abs(sprite.scaleY || 1);
-    if (scaleX <= 0 || scaleY <= 0) return;
+
     const body = sprite.body;
-    const targetW = Math.max(1, Math.round(targetWWorld / scaleX));
-    const targetH = Math.max(1, Math.round(targetHWorld / scaleY));
-    body.setSize(targetW, targetH, false);
-    const frameW = sprite.width;
-    const frameH = sprite.height;
-    const offX = Math.round((frameW - targetW) / 2);
-    const offY = Math.round(frameH - targetH);
+
+    // Größe in WORLD-Pixeln (so wie übergeben: 26x44 etc.)
+    const w = Math.max(1, Math.round(targetWWorld));
+    const h = Math.max(1, Math.round(targetHWorld));
+
+    body.setSize(w, h, false);
+
+    // Offsets in WORLD-Pixeln basierend auf sichtbarer (skalierter) Größe
+    const dw = sprite.displayWidth;
+    const dh = sprite.displayHeight;
+
+    const offX = Math.round((dw - w) / 2);
+    const offY = Math.round(dh - h);
+
     body.setOffset(offX, offY);
+
+    // Optional – nur falls vorhanden
     if (typeof body.updateFromGameObject === 'function') {
       body.updateFromGameObject();
     }
