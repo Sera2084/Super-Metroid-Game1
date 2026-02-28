@@ -510,6 +510,8 @@ export class GameScene extends Phaser.Scene {
   update(_time, delta) {
     try {
       this.handleMovement();
+      this.cameras.main.scrollX = Math.round(this.cameras.main.scrollX);
+      this.cameras.main.scrollY = Math.round(this.cameras.main.scrollY);
       this.captureLastPressedButton();
       const shootPressed = Phaser.Input.Keyboard.JustDown(this.keys.shoot) || this.isShootJustDown();
       if (shootPressed) {
