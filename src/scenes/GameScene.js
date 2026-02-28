@@ -48,20 +48,28 @@ export class GameScene extends Phaser.Scene {
     this.player = this.physics.add.sprite(64, 64, 'player', 1);
     this.player.setOrigin(0.5, 1);
     this.player.setScale(0.07);
-    const PLAYER_FRAME_W = 768;
-    const PLAYER_FRAME_H = 1024;
-    const TARGET_BODY_W = 26;
-    const TARGET_BODY_H = 44;
-    const BODY_TWEAK_WORLD_Y = -12;
-    const scale = this.player.scaleX || 1;
-    const bodyW = Math.max(1, Math.round(TARGET_BODY_W / scale));
-    const bodyH = Math.max(1, Math.round(TARGET_BODY_H / scale));
-    const tweakY = Math.round(BODY_TWEAK_WORLD_Y / scale);
-    const body = this.player.body;
-    body.setSize(bodyW, bodyH, false);
-    const offX = Math.round((PLAYER_FRAME_W - bodyW) / 2);
-    const offY = Math.round(PLAYER_FRAME_H - bodyH + tweakY);
-    body.setOffset(offX, offY);
+    this.alignBodyFeet(this.player, 26, 44, 5);
+    const p = this.player;
+    console.log(
+      '[PLAYER]',
+      'y',
+      p.y,
+      'body.bottom',
+      p.body.bottom,
+      'gapWorld(body.bottom - y)=',
+      p.body.bottom - p.y,
+      'scale',
+      p.scaleX,
+      'frame',
+      p.frame?.width,
+      p.frame?.height,
+      'src',
+      p.frame?.sourceSizeW,
+      p.frame?.sourceSizeH,
+      'trim',
+      p.frame?.spriteSourceSizeX,
+      p.frame?.spriteSourceSizeY
+    );
     this.player.setFrame(0);
     this.player.setFlipX(false);
     this.player.setCollideWorldBounds(true);
@@ -140,6 +148,33 @@ export class GameScene extends Phaser.Scene {
     if (this.player && this.roomCollisionLayer) {
       this.playerTileCollider = this.physics.add.collider(this.player, this.roomCollisionLayer);
     }
+  }
+
+  alignBodyFeet(sprite, bodyWWorld, bodyHWorld, footFudgeWorld = 0) {
+    if (!sprite?.body || !sprite.frame) return;
+    sprite.setOrigin(0.5, 1);
+    const scale = sprite.scaleX || 1;
+    const body = sprite.body;
+    const f = sprite.frame;
+
+    const bodyW = Math.max(2, Math.round(bodyWWorld / scale));
+    const bodyH = Math.max(2, Math.round(bodyHWorld / scale));
+    const srcW = typeof f.sourceSizeW === 'number' ? f.sourceSizeW : f.width;
+    const srcH = typeof f.sourceSizeH === 'number' ? f.sourceSizeH : f.height;
+    const trimX = typeof f.spriteSourceSizeX === 'number' ? f.spriteSourceSizeX : 0;
+    const trimY = typeof f.spriteSourceSizeY === 'number' ? f.spriteSourceSizeY : 0;
+
+    const offXSource = Math.round((srcW - bodyW) / 2);
+    const offYSource = Math.round(srcH - bodyH);
+    let offX = offXSource - trimX;
+    let offY = offYSource - trimY;
+    const fudgeTex = Math.round(footFudgeWorld / scale);
+    offY += fudgeTex;
+
+    offX = Math.max(0, Math.min(offX, Math.max(0, f.width - bodyW)));
+    offY = Math.max(0, Math.min(offY, Math.max(0, f.height - bodyH)));
+    body.setSize(bodyW, bodyH, false);
+    body.setOffset(offX, offY);
   }
 
   snapPlayerToGround(maxScanPx = 256) {
