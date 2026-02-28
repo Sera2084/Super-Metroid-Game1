@@ -49,8 +49,7 @@ export class GameScene extends Phaser.Scene {
     this.player.setCollideWorldBounds(true);
 
     this.bullets = this.physics.add.group({
-      classType: Phaser.Physics.Arcade.Image,
-      maxSize: 18
+      allowGravity: false
     });
 
     this.createHud();
@@ -156,6 +155,10 @@ export class GameScene extends Phaser.Scene {
 
     this.gamepadLiveText = this.add
       .text(16, 196, 'PadLive: btn=-1 axes=n/a', { fontFamily: 'monospace', fontSize: '11px', color: '#ffd79a' })
+      .setScrollFactor(0);
+
+    this.pewText = this.add
+      .text(16, 212, '', { fontFamily: 'monospace', fontSize: '12px', color: '#fff176' })
       .setScrollFactor(0);
   }
 
@@ -317,19 +320,30 @@ export class GameScene extends Phaser.Scene {
 
   tryShoot() {
     const now = this.time.now;
-    if (this.lastShotAt && now - this.lastShotAt < 180) return;
-
-    const bullet = this.bullets.get(this.player.x, this.player.y - 3, 'bullet');
+    if (this.lastShotAt && now < this.lastShotAt + 150) return;
+    const facing = this.playerState.facing >= 0 ? 1 : -1;
+    const spawnX = this.player.x + facing * 14;
+    const spawnY = this.player.y - 4;
+    const bullet = this.physics.add.image(spawnX, spawnY, 'bullet');
     if (!bullet) return;
 
-    bullet.setActive(true);
-    bullet.setVisible(true);
-    bullet.body.allowGravity = false;
-    bullet.setVelocity(260 * this.playerState.facing, 0);
+    bullet.setAllowGravity(false);
+    bullet.setVelocityX(facing * 420);
+    bullet.setDepth(10);
+    bullet.body?.setSize(bullet.width, bullet.height, true);
+    bullet.setCollideWorldBounds(false);
+    this.bullets.add(bullet);
     this.lastShotAt = now;
+    this.pewText.setText('PEW!');
+    this.time.delayedCall(200, () => {
+      if (this.pewText?.active) this.pewText.setText('');
+    });
 
-    this.time.delayedCall(1100, () => {
-      if (bullet.active) bullet.disableBody(true, true);
+    this.time.delayedCall(800, () => {
+      if (bullet.active) {
+        bullet.disableBody(true, true);
+      }
+      bullet.destroy();
     });
   }
 
