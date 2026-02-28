@@ -8,6 +8,7 @@ export class GameScene extends Phaser.Scene {
   constructor() {
     super('GameScene');
     this.pad = null;
+    this.gamepadPrevPressed = new Map();
     this.lastPressedButtonIndex = -1;
     this.lastAxesPreview = 'n/a';
     this.lastGamepadDebugHudAt = 0;
@@ -188,6 +189,7 @@ export class GameScene extends Phaser.Scene {
     const normalized = text.replace(/\s+/g, ' ').trim();
     const shortened = normalized.length > 90 ? `${normalized.slice(0, 87)}...` : normalized;
     this.lastErrorMessage = shortened || 'Unknown error';
+    this.lastErrorExpiresAt = (this.time?.now ?? 0) + 2000;
     console.error('[GameScene] Runtime error:', errorLike);
     this.lastErrorText?.setText(`LastError: ${this.lastErrorMessage}`);
   }
@@ -236,11 +238,24 @@ export class GameScene extends Phaser.Scene {
     return button;
   }
 
+  isGamepadButtonJustPressed(buttonIndex) {
+    if (!this.pad || !this.pad.connected) return false;
+    const button = this.getButton(buttonIndex);
+    if (!button) return false;
+    const pressedNow = Boolean(button.pressed);
+    const pressedBefore = Boolean(this.gamepadPrevPressed.get(buttonIndex));
+    this.gamepadPrevPressed.set(buttonIndex, pressedNow);
+    return pressedNow && !pressedBefore;
+  }
+
   refreshConnectedPad(forceHud = false) {
     const gamepadPlugin = this.input.gamepad;
     if (!gamepadPlugin) return;
     const previousId = this.pad?.id ?? null;
     this.pad = gamepadPlugin.gamepads?.find((pad) => pad && pad.connected) ?? null;
+    if (!this.pad || !this.pad.connected) {
+      this.gamepadPrevPressed.clear();
+    }
     const nextId = this.pad?.id ?? null;
     if (forceHud || previousId !== nextId) {
       this.updateHud();
@@ -248,21 +263,22 @@ export class GameScene extends Phaser.Scene {
   }
 
   isJumpJustDown() {
-    const jumpButton = this.getButton(this.gamepadButtons.jump);
-    return Boolean(jumpButton && Phaser.Input.Gamepad.JustDown(jumpButton));
+    const justPressed = this.isGamepadButtonJustPressed(this.gamepadButtons.jump);
+    if (justPressed) this.lastPressedButtonIndex = this.gamepadButtons.jump;
+    return justPressed;
   }
 
   isShootJustDown() {
-    const shootButton = this.getButton(this.gamepadButtons.shoot);
-    return Boolean(shootButton && Phaser.Input.Gamepad.JustDown(shootButton));
+    const justPressed = this.isGamepadButtonJustPressed(this.gamepadButtons.shoot);
+    if (justPressed) this.lastPressedButtonIndex = this.gamepadButtons.shoot;
+    return justPressed;
   }
 
   captureLastPressedButton() {
     if (!this.pad || !this.pad.connected || !Array.isArray(this.pad.buttons)) return;
     for (let i = 0; i < this.pad.buttons.length; i += 1) {
-      const button = this.getButton(i);
-      if (!button) continue;
-      if (Phaser.Input.Gamepad.JustDown(button)) {
+      if (i === this.gamepadButtons.jump || i === this.gamepadButtons.shoot) continue;
+      if (this.isGamepadButtonJustPressed(i)) {
         this.lastPressedButtonIndex = i;
       }
     }
@@ -414,6 +430,10 @@ export class GameScene extends Phaser.Scene {
       this.updateGamepadLiveHud();
       if (this.player.y > this.physics.world.bounds.height + 60) {
         this.damagePlayer(99);
+      }
+      if (this.lastErrorMessage && this.time.now > (this.lastErrorExpiresAt ?? 0)) {
+        this.lastErrorMessage = null;
+        this.lastErrorText?.setText('LastError: none');
       }
     } catch (error) {
       this.reportError(error);
