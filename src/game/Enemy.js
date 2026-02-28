@@ -45,6 +45,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     if (nextFrame !== this.lastFacingFrame) {
       this.setFrame(nextFrame);
       this.alignBodyToFeet(18, 14);
+      this.scene?.alignSpriteFeetToBody?.(this, 0);
       this.lastFacingFrame = nextFrame;
     }
   }

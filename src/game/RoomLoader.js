@@ -89,6 +89,9 @@ export class RoomLoader {
       enemy.setScale(enemyScale);
       enemy.alignBodyToFeet?.(18, 14);
       this.scene.enemyGroup.add(enemy);
+      this.scene.time.delayedCall(0, () => {
+        this.scene.alignSpriteFeetToBody?.(enemy, 0);
+      });
     });
 
     room.doors.forEach((door) => {
@@ -115,6 +118,9 @@ export class RoomLoader {
 
     this.scene.refreshPlayerTileCollider?.();
     this.scene.snapPlayerToGround?.();
+    this.scene.time.delayedCall(0, () => {
+      this.scene.alignSpriteFeetToBody?.(this.scene.player, 0);
+    });
     this.scene.enemyTileCollider = this.scene.physics.add.collider(this.scene.enemyGroup, this.scene.roomCollisionLayer);
     this.scene.enemyGroup.children.iterate((enemy) => {
       if (!enemy?.body) return;

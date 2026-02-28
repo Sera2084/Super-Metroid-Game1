@@ -48,7 +48,7 @@ export class GameScene extends Phaser.Scene {
     this.player = this.physics.add.sprite(64, 64, 'player', 1);
     this.player.setOrigin(0.5, 1);
     this.player.setScale(0.07);
-    this.alignBodyFeet(this.player, 26, 44, -5);
+    this.alignBodyFeet(this.player, 26, 44);
     this.player.setFrame(0);
     this.player.setFlipX(false);
     this.player.setCollideWorldBounds(true);
@@ -87,6 +87,9 @@ export class GameScene extends Phaser.Scene {
 
     this.roomLoader = new RoomLoader(this, getRoomById, this.gameState);
     this.roomLoader.loadRoom('room_01', 'start');
+    this.time.delayedCall(0, () => {
+      this.alignSpriteFeetToBody(this.player, 0);
+    });
     this.updateCameraZoomToFit();
     this.cameras.main.centerOn(this.player.x, this.player.y);
     this.cameras.main.startFollow(this.player, true, 1, 1);
@@ -129,7 +132,7 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  alignBodyFeet(sprite, bodyWWorld, bodyHWorld, footFudgeWorld = 0) {
+  alignBodyFeet(sprite, bodyWWorld, bodyHWorld) {
     if (!sprite?.body || !sprite.frame) return;
     sprite.setOrigin(0.5, 1);
     const scale = sprite.scaleX || 1;
@@ -147,13 +150,23 @@ export class GameScene extends Phaser.Scene {
     const offYSource = Math.round(srcH - bodyH);
     let offX = offXSource - trimX;
     let offY = offYSource - trimY;
-    const fudgeTex = Math.round(footFudgeWorld / scale);
-    offY += fudgeTex;
 
     offX = Math.max(0, Math.min(offX, Math.max(0, f.width - bodyW)));
     offY = Math.max(0, Math.min(offY, Math.max(0, f.height - bodyH)));
     body.setSize(bodyW, bodyH, false);
     body.setOffset(offX, offY);
+  }
+
+  alignSpriteFeetToBody(sprite, fudgeWorld = 0) {
+    if (!sprite?.body) return;
+    sprite.setOrigin(0.5, 1);
+    const bodyBottom = sprite.body.bottom;
+    const gap = bodyBottom - sprite.y;
+    if (Math.abs(gap) > 0.25) {
+      sprite.y += gap + fudgeWorld;
+    } else if (fudgeWorld !== 0) {
+      sprite.y += fudgeWorld;
+    }
   }
 
   snapSpriteToGround(sprite, maxScanPx = 256) {
