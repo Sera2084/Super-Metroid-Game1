@@ -335,10 +335,13 @@ export class GameScene extends Phaser.Scene {
     bullet.setDepth(10);
     const body = bullet.body;
     body.reset(spawn.x, spawn.y);
+    body.moves = true;
     body.allowGravity = false;
+    if (body.setGravityY) body.setGravityY(0);
     body.gravity.y = 0;
     body.setDrag(0, 0);
     body.setBounce(0, 0);
+    body.velocity.x = facing * 520;
     body.velocity.y = 0;
     bullet.setVelocity(facing * 520, 0);
     bullet.isProjectile = true;
@@ -346,7 +349,6 @@ export class GameScene extends Phaser.Scene {
     bullet.setCollideWorldBounds(false);
     bullet.spawnTime = this.time.now;
     bullet.lifespan = 800;
-    this.bullets.add(bullet);
     this.bulletsList.push(bullet);
     this.lastShotAt = now;
     this.pewText.setText('PEW!');
@@ -472,6 +474,11 @@ export class GameScene extends Phaser.Scene {
       const rightBound = this.cameras.main.worldView.right + 50;
       this.bulletsList = this.bulletsList.filter((b) => {
         if (!b || !b.active || !b.body) return false;
+        if (Math.abs(b.body.velocity.x) < 1 && typeof b.vx === 'number') {
+          b.body.velocity.x = b.vx;
+        }
+        b.body.velocity.y = 0;
+        b.body.allowGravity = false;
         b.lifespan -= delta;
         if (b.lifespan <= 0 || b.x < leftBound || b.x > rightBound) {
           b.destroy();
