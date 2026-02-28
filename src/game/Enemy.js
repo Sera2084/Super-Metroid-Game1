@@ -29,8 +29,20 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     super.preUpdate(time, delta);
     if (!this.active) return;
 
+    if (this.body?.blocked?.left) this.direction = 1;
+    if (this.body?.blocked?.right) this.direction = -1;
     if (this.x >= this.maxX) this.direction = -1;
     if (this.x <= this.minX) this.direction = 1;
+
+    const layer = this.scene?.roomCollisionLayer;
+    if (layer && this.body?.blocked?.down) {
+      const aheadX = this.body.center.x + this.direction * (this.body.halfWidth + 2);
+      const downY = this.body.bottom + 2;
+      const tileAhead = layer.getTileAtWorldXY(aheadX, downY, true);
+      if (!tileAhead || !tileAhead.collides) {
+        this.direction *= -1;
+      }
+    }
 
     this.setVelocityX(this.speed * this.direction);
     this.setFrame(this.direction < 0 ? 0 : 1);

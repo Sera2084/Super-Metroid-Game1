@@ -425,7 +425,7 @@ export class GameScene extends Phaser.Scene {
 
   damagePlayer(amount) {
     const now = this.time.now;
-    if (now < this.playerState.invulUntil) return;
+    if (now < this.playerState.invulUntil) return false;
 
     this.playerState.hp = Math.max(0, this.playerState.hp - amount);
     this.playerState.invulUntil = now + 850;
@@ -445,6 +445,15 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.updateHud();
+    return true;
+  }
+
+  onPlayerTouchEnemy(player, enemy) {
+    const damage = Math.max(1, enemy?.damageToPlayer ?? 1);
+    const wasDamaged = this.damagePlayer(damage);
+    if (!wasDamaged) return;
+    const dir = (player?.x ?? 0) < (enemy?.x ?? 0) ? -1 : 1;
+    player?.setVelocity?.(dir * 150, -150);
   }
 
   handleMovement() {

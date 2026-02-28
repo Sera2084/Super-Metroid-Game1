@@ -112,8 +112,12 @@ export class RoomLoader {
     this.scene.refreshPlayerTileCollider?.();
     this.scene.snapPlayerToGround?.();
     this.scene.enemyTileCollider = this.scene.physics.add.collider(this.scene.enemyGroup, this.scene.roomCollisionLayer);
-    this.scene.playerEnemyCollider = this.scene.physics.add.overlap(this.scene.player, this.scene.enemyGroup, () => {
-      this.scene.damagePlayer(1);
+    this.scene.playerEnemyCollider = this.scene.physics.add.overlap(this.scene.player, this.scene.enemyGroup, (player, enemy) => {
+      if (this.scene.onPlayerTouchEnemy) {
+        this.scene.onPlayerTouchEnemy(player, enemy);
+      } else {
+        this.scene.damagePlayer(1);
+      }
     });
     this.scene.bulletEnemyOverlap = this.scene.physics.add.overlap(
       this.scene.bulletsGroup,
