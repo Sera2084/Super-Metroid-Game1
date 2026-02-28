@@ -52,7 +52,7 @@ export class GameScene extends Phaser.Scene {
     const PLAYER_FRAME_H = 1024;
     const TARGET_BODY_W = 26;
     const TARGET_BODY_H = 44;
-    const BODY_TWEAK_WORLD_Y = 0;
+    const BODY_TWEAK_WORLD_Y = -30;
     const scale = this.player.scaleX || 1;
     const bodyW = Math.max(1, Math.round(TARGET_BODY_W / scale));
     const bodyH = Math.max(1, Math.round(TARGET_BODY_H / scale));
@@ -483,6 +483,11 @@ export class GameScene extends Phaser.Scene {
 
     if (this.time.now > this.playerState.dashUntil) {
       body.allowGravity = true;
+    }
+
+    if (body.blocked.down && Math.abs(body.velocity.y) < 1) {
+      this.player.y = Math.round(this.player.y);
+      body.velocity.y = 0;
     }
 
   }
