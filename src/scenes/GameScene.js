@@ -334,12 +334,16 @@ export class GameScene extends Phaser.Scene {
     if (!bullet) return;
 
     bullet.enableBody(true, spawn.x, spawn.y, true, true);
+    bullet.spawnTime = this.time.now;
     bullet.body.enable = true;
-    bullet.body.allowGravity = false;
-    bullet.body.setAllowGravity(false);
-    bullet.body.setGravity(0, 0);
-    bullet.body.setImmovable(true);
-    bullet.body.setSize(6, 6, true);
+    if (bullet.body) {
+      bullet.body.allowGravity = false;
+      bullet.body.setAllowGravity(false);
+      bullet.body.setGravity(0, 0);
+      bullet.body.setVelocityY(0);
+      bullet.body.setImmovable(true);
+      bullet.body.setSize(6, 6, true);
+    }
     bullet.setAllowGravity(false);
     bullet.setDrag(0, 0);
     bullet.setFriction(0, 0);
@@ -353,7 +357,6 @@ export class GameScene extends Phaser.Scene {
       bullet.body.checkCollision.down = false;
     }
     bullet.setCollideWorldBounds(false);
-    bullet.spawnTime = this.time.now;
     bullet.lifespan = 800;
     this.lastShotAt = now;
     this.pewText.setText('PEW!');
@@ -480,6 +483,7 @@ export class GameScene extends Phaser.Scene {
         if (typeof bullet.lifespan !== 'number') return;
         bullet.lifespan -= delta;
         if (bullet.lifespan <= 0) {
+          this.lastErrorText?.setText('BulletDisable: lifespan');
           bullet.disableBody(true, true);
         }
       });

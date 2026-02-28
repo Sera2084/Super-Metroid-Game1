@@ -114,13 +114,13 @@ export class RoomLoader {
       this.scene.bullets,
       this.scene.roomCollisionLayer,
       (bullet) => {
-        this.scene.lastErrorText?.setText(`BulletHitTile @ ${Math.round(bullet.x)},${Math.round(bullet.y)}`);
+        this.scene.lastErrorText?.setText(`BulletDisable: tile @ ${Math.round(bullet.x)},${Math.round(bullet.y)}`);
         bullet.disableBody(true, true);
       },
       (bullet) => {
         const now = this.scene.time.now;
-        const spawnTime = bullet.spawnTime ?? 0;
-        return now - spawnTime > 80;
+        const spawnTime = typeof bullet.spawnTime === 'number' ? bullet.spawnTime : now;
+        return now - spawnTime > 120;
       }
     );
 
