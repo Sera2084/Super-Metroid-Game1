@@ -45,14 +45,16 @@ export class GameScene extends Phaser.Scene {
 
     // Player wird zentral erzeugt und in jedem Raum nur repositioniert.
     this.player = this.physics.add.sprite(64, 64, 'player', 1);
-    this.player.setScale(0.08);
-    this.player.setOrigin(0.5, 1);
-    const bodyW = Math.round(this.player.displayWidth * 0.4);
-    const bodyH = Math.round(this.player.displayHeight * 0.7);
+    this.player.setScale(0.07);
+    this.player.setOrigin(0.5, 0.5);
+    const dw = this.player.displayWidth;
+    const dh = this.player.displayHeight;
+    const bodyW = Math.round(dw * 0.38);
+    const bodyH = Math.round(dh * 0.68);
     this.player.body.setSize(bodyW, bodyH);
     this.player.body.setOffset(
-      Math.round((this.player.displayWidth - bodyW) / 2),
-      Math.round(this.player.displayHeight - bodyH)
+      Math.round((dw - bodyW) / 2),
+      Math.round(dh - bodyH) - 4
     );
     this.player.setCollideWorldBounds(true);
 
@@ -421,10 +423,10 @@ export class GameScene extends Phaser.Scene {
     this.player.setVelocityX(moveX * moveSpeed);
     if (moveX < 0) {
       this.playerState.facing = -1;
-      this.player.setFrame(0);
+      this.player.setFrame(1);
     } else if (moveX > 0) {
       this.playerState.facing = 1;
-      this.player.setFrame(1);
+      this.player.setFrame(0);
     }
 
     const jumpPressed =
