@@ -13,6 +13,10 @@ const config = {
       debug: false
     }
   },
+  input: {
+    keyboard: true,
+    gamepad: true
+  },
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
