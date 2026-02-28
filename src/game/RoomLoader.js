@@ -84,6 +84,36 @@ export class RoomLoader {
       const min = tileToPixel(spawnDef.patrolMinTileX, spawnDef.tileY);
       const max = tileToPixel(spawnDef.patrolMaxTileX, spawnDef.tileY);
       const enemy = this.scene.createEnemy(start.x, start.y, min.x, max.x);
+      const tileH = this.scene.roomCollisionLayer?.tilemap?.tileHeight ?? TILE_SIZE;
+      const f = enemy.frame;
+      const srcH = typeof f?.sourceSizeH === 'number' ? f.sourceSizeH : f?.height ?? 1;
+      const desiredWorldH = tileH * 1.0;
+      const scaleFromTile = desiredWorldH / Math.max(1, srcH);
+      const scaleFromPlayer = (this.scene.player?.scaleX ?? 0.1) * 0.9;
+      const enemyScale = Math.max(scaleFromTile, scaleFromPlayer);
+      enemy.setScale(enemyScale);
+      this.scene.alignBodyFeet?.(enemy, 18, 14, 0);
+      const e = enemy;
+      console.log(
+        '[ENEMY ]',
+        'y',
+        e.y,
+        'body.bottom',
+        e.body.bottom,
+        'gapWorld(body.bottom - y)=',
+        e.body.bottom - e.y,
+        'scale',
+        e.scaleX,
+        'frame',
+        e.frame?.width,
+        e.frame?.height,
+        'src',
+        e.frame?.sourceSizeW,
+        e.frame?.sourceSizeH,
+        'trim',
+        e.frame?.spriteSourceSizeX,
+        e.frame?.spriteSourceSizeY
+      );
       this.scene.enemyGroup.add(enemy);
     });
 
