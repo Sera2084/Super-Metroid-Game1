@@ -91,26 +91,6 @@ export class RoomLoader {
       const enemyScale = desiredWorldH / Math.max(1, srcH);
       enemy.setScale(enemyScale);
       enemy.alignBodyToFeet?.(18, 14);
-      if (!this.scene._enemyDebugLogged) {
-        this.scene._enemyDebugLogged = true;
-        console.log(
-          '[ENEMY]',
-          'y=',
-          enemy.y,
-          'body.bottom=',
-          enemy.body.bottom,
-          'gapWorld=',
-          enemy.body.bottom - enemy.y,
-          'scale=',
-          enemy.scaleX,
-          'frameH=',
-          enemy.frame?.height,
-          'srcH=',
-          enemy.frame?.sourceSizeH,
-          'trimY=',
-          enemy.frame?.spriteSourceSizeY
-        );
-      }
       this.scene.enemyGroup.add(enemy);
     });
 

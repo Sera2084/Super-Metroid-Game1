@@ -48,27 +48,7 @@ export class GameScene extends Phaser.Scene {
     this.player = this.physics.add.sprite(64, 64, 'player', 1);
     this.player.setOrigin(0.5, 1);
     this.player.setScale(0.07);
-    this.alignBodyFeet(this.player, 26, 44, 5);
-    if (!this._playerDebugLogged) {
-      this._playerDebugLogged = true;
-      console.log(
-        '[PLAYER]',
-        'y=',
-        this.player.y,
-        'body.bottom=',
-        this.player.body.bottom,
-        'gapWorld=',
-        this.player.body.bottom - this.player.y,
-        'scale=',
-        this.player.scaleX,
-        'frameH=',
-        this.player.frame?.height,
-        'srcH=',
-        this.player.frame?.sourceSizeH,
-        'trimY=',
-        this.player.frame?.spriteSourceSizeY
-      );
-    }
+    this.alignBodyFeet(this.player, 26, 44, -5);
     this.player.setFrame(0);
     this.player.setFlipX(false);
     this.player.setCollideWorldBounds(true);
