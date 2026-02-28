@@ -13,11 +13,7 @@ export class BootScene extends Phaser.Scene {
       `${base}assets/sprites/player_pair.png`,
       { frameWidth: 768, frameHeight: 1024 }
     );
-    this.load.spritesheet(
-      'enemy1',
-      `${base}assets/sprites/enemy1.png`,
-      { frameWidth: 768, frameHeight: 1024 }
-    );
+    this.load.image('enemy1_img', `${base}assets/sprites/enemy1.png`);
 
     this.load.spritesheet(
       'tiles_biolab',
@@ -27,6 +23,15 @@ export class BootScene extends Phaser.Scene {
   }
 
   create() {
+    const enemyTexture = this.textures.get('enemy1_img');
+    const enemyImage = enemyTexture?.getSourceImage?.();
+    if (!enemyImage) {
+      throw new Error('enemy1_img konnte nicht geladen werden.');
+    }
+    const frameWidth = Math.floor(enemyImage.width / 2);
+    const frameHeight = enemyImage.height;
+    this.textures.addSpriteSheet('enemy1', enemyImage, { frameWidth, frameHeight });
+    this.textures.remove('enemy1_img');
     this.createTextures();
     this.scene.start('GameScene');
   }
