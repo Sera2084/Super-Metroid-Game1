@@ -48,19 +48,14 @@ export class GameScene extends Phaser.Scene {
     this.player = this.physics.add.sprite(64, 64, 'player', 1);
     this.player.setOrigin(0.5, 1);
     this.player.setScale(0.07);
-    const PLAYER_FRAME_W = 768;
-    const PLAYER_FRAME_H = 1024;
     const TARGET_BODY_W = 26;
     const TARGET_BODY_H = 44;
-    const scale = this.player.scaleX || 1;
-    const bodyW = Math.max(1, Math.round(TARGET_BODY_W / scale));
-    const bodyH = Math.max(1, Math.round(TARGET_BODY_H / scale));
+    const FOOT_VISUAL_GAP_WORLD = 30;
     const body = this.player.body;
-    body.setSize(bodyW, bodyH, false);
-    const offX = Math.round((PLAYER_FRAME_W - bodyW) / 2);
-    const offY = Math.round(PLAYER_FRAME_H - bodyH);
+    body.setSize(TARGET_BODY_W, TARGET_BODY_H, false);
+    const offX = Math.round((this.player.displayWidth - TARGET_BODY_W) / 2);
+    const offY = Math.round(this.player.displayHeight - TARGET_BODY_H - FOOT_VISUAL_GAP_WORLD);
     body.setOffset(offX, offY);
-    this.calibratePlayerBodyFeet();
     this.player.setFrame(0);
     this.player.setFlipX(false);
     this.player.setCollideWorldBounds(true);
@@ -138,19 +133,6 @@ export class GameScene extends Phaser.Scene {
     }
     if (this.player && this.roomCollisionLayer) {
       this.playerTileCollider = this.physics.add.collider(this.player, this.roomCollisionLayer);
-    }
-  }
-
-  calibratePlayerBodyFeet() {
-    const body = this.player?.body;
-    if (!body) return;
-    let gapWorld = body.bottom - this.player.y;
-    let guard = 0;
-    while (Math.abs(gapWorld) > 0.5 && guard < 4096) {
-      const dir = gapWorld > 0 ? -1 : 1;
-      body.setOffset(body.offset.x, body.offset.y + dir);
-      gapWorld = body.bottom - this.player.y;
-      guard += 1;
     }
   }
 
