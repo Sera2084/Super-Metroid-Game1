@@ -11,8 +11,8 @@ export class GameScene extends Phaser.Scene {
     this.lastGamepadPollAt = 0;
     this.gamepadDeadzone = 0.25;
     this.gamepadButtons = {
-      jump: 0,
-      shoot: 2,
+      jump: 1,
+      shoot: 3,
       dpadLeft: 14,
       dpadRight: 15,
       stickX: 0
