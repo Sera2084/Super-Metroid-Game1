@@ -48,26 +48,17 @@ export class GameScene extends Phaser.Scene {
     this.player = this.physics.add.sprite(64, 64, 'player', 1);
     this.player.setOrigin(0.5, 1);
     this.player.setScale(0.07);
-    const PLAYER_FRAME_W = 768;
-    const PLAYER_FRAME_H = 1024;
     const TARGET_BODY_W = 26;
     const TARGET_BODY_H = 44;
-    const BODY_TWEAK_WORLD_Y = 3;
-    const scale = this.player.scaleX;
-    const bodyW = Math.max(1, Math.round(TARGET_BODY_W / scale));
-    const bodyH = Math.max(1, Math.round(TARGET_BODY_H / scale));
-    const tweakY = Math.round(BODY_TWEAK_WORLD_Y / scale);
-    this.player.body.setSize(bodyW, bodyH, false);
-    const offX = Math.round((PLAYER_FRAME_W - bodyW) / 2);
-    const offY = Math.round(PLAYER_FRAME_H - bodyH + tweakY);
-    this.player.body.setOffset(offX, offY);
-    // Auto-calibrate once: align physics feet to sprite feet (originY=1).
     const body = this.player.body;
+    body.setSize(TARGET_BODY_W, TARGET_BODY_H, false);
+    const offX = Math.round((this.player.displayWidth - TARGET_BODY_W) / 2);
+    const offY = Math.round(this.player.displayHeight - TARGET_BODY_H);
+    body.setOffset(offX, offY);
+    // One-time calibration: feet of body should sit exactly at sprite feet (player.y).
     const gapWorld = body.bottom - this.player.y;
-    if (Math.abs(gapWorld) > 1) {
-      const adjustTex = Math.round(gapWorld / scale);
-      const curOff = body.offset.y;
-      body.setOffset(body.offset.x, curOff - adjustTex);
+    if (Math.abs(gapWorld) > 0.5) {
+      body.setOffset(body.offset.x, body.offset.y - gapWorld);
     }
     this.player.setFrame(0);
     this.player.setFlipX(false);
