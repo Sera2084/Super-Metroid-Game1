@@ -32,7 +32,6 @@ export class GameScene extends Phaser.Scene {
 
   create() {
     this.gameState = new GameState();
-    this.physics.world.gravity.y = 0;
 
     this.cursors = this.input.keyboard.createCursorKeys();
     this.keys = this.input.keyboard.addKeys({
@@ -472,14 +471,6 @@ export class GameScene extends Phaser.Scene {
       if (shootPressed) {
         this.tryShoot();
       }
-      this.bullets.children.iterate((bullet) => {
-        if (!bullet?.active || !bullet.body) return;
-        if (bullet.isProjectile) {
-          bullet.body.allowGravity = false;
-          bullet.body.gravity.y = 0;
-          bullet.body.velocity.y = 0;
-        }
-      });
       this.shotsText.setText(`Shots: ${this.bullets.countActive(true)}`);
       let firstActiveBullet = null;
       this.bullets.children.iterate((bullet) => {

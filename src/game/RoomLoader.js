@@ -110,13 +110,19 @@ export class RoomLoader {
         enemy.hurt();
       }
     );
-    this.scene.bulletTileCollider = this.scene.physics.add.collider(
+    this.scene.bulletTileCollider = this.scene.physics.add.overlap(
       this.scene.bullets,
       this.scene.roomCollisionLayer,
       (bullet) => {
-        this.scene.lastErrorText?.setText(`BulletDisable: tile @ ${Math.round(bullet.x)},${Math.round(bullet.y)}`);
-        if (bullet?.active) bullet.destroy();
-      }
+        this.scene.lastErrorText?.setText(`BulletHitTile @ ${Math.round(bullet.x)},${Math.round(bullet.y)}`);
+        if (bullet?.active) bullet.disableBody(true, true);
+      },
+      (bullet) => {
+        const now = this.scene.time.now;
+        const spawnTime = bullet.spawnTime ?? 0;
+        return now - spawnTime > 80;
+      },
+      this
     );
 
     this.scene.playerDoorOverlap = this.scene.physics.add.overlap(this.scene.player, this.scene.doorZones, (_, zone) => {
