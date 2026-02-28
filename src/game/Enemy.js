@@ -48,8 +48,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     const nextFrame = this.direction < 0 ? 0 : 1;
     if (nextFrame !== this.lastFacingFrame) {
       this.setFacingFrame(this.direction);
-      const ENEMY_FOOT_PAD_WORLD = 45;
-      this.scene?.setupFeetBody?.(this, 18, 14, ENEMY_FOOT_PAD_WORLD);
+      this.scene?.setWorldHitbox?.(this, 18, 14);
       this.lastFacingFrame = nextFrame;
     }
   }

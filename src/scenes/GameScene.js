@@ -49,8 +49,7 @@ export class GameScene extends Phaser.Scene {
     this.player = this.physics.add.sprite(64, 64, 'player', 1);
     this.player.setOrigin(0.5, 1);
     this.player.setScale(0.07);
-    const PLAYER_FOOT_PAD_WORLD = 30;
-    this.setupFeetBody(this.player, 26, 44, PLAYER_FOOT_PAD_WORLD);
+    this.setWorldHitbox(this.player, 26, 44);
     this.player.setFrame(0);
     this.player.setFlipX(false);
     this.player.setCollideWorldBounds(true);
@@ -164,22 +163,21 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  setupFeetBody(sprite, bodyWWorld, bodyHWorld, footPadWorld = 0) {
+  setWorldHitbox(sprite, targetWWorld, targetHWorld) {
     if (!sprite?.body || !sprite.frame) return;
     sprite.setOrigin(0.5, 1);
     const scale = sprite.scaleX || 1;
     const body = sprite.body;
     const f = sprite.frame;
 
-    const bodyW = Math.max(2, Math.round(bodyWWorld / scale));
-    const bodyH = Math.max(2, Math.round(bodyHWorld / scale));
+    const bodyW = Math.max(2, Math.round(targetWWorld / scale));
+    const bodyH = Math.max(2, Math.round(targetHWorld / scale));
     const fw = f.width;
     const fh = f.height;
-    const footPadTex = Math.round(footPadWorld / scale);
     let offX = Math.round((fw - bodyW) / 2);
-    const offY = Math.round((fh - bodyH) - footPadTex);
+    const offY = Math.round(fh - bodyH);
     offX = Math.max(0, Math.min(offX, Math.max(0, f.width - bodyW)));
-    const offYc = Math.max(0, Math.min(offY, Math.max(0, fh - bodyH)));
+    const offYc = Math.max(0, Math.min(offY, Math.max(0, f.height - bodyH)));
     body.setSize(bodyW, bodyH, false);
     body.setOffset(offX, offYc);
   }

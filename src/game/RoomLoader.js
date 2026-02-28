@@ -87,8 +87,7 @@ export class RoomLoader {
       const pScale = this.scene.player?.scaleX ?? 0.07;
       const enemyScale = pScale * 0.95;
       enemy.setScale(enemyScale);
-      const ENEMY_FOOT_PAD_WORLD = 45;
-      this.scene.setupFeetBody?.(enemy, 18, 14, ENEMY_FOOT_PAD_WORLD);
+      this.scene.setWorldHitbox?.(enemy, 18, 14);
       this.scene.enemyGroup.add(enemy);
     });
 
