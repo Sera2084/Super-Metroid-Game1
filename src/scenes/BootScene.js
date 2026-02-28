@@ -13,6 +13,11 @@ export class BootScene extends Phaser.Scene {
       `${base}assets/sprites/player_pair.png`,
       { frameWidth: 768, frameHeight: 1024 }
     );
+    this.load.spritesheet(
+      'enemy1',
+      `${base}assets/sprites/enemy1.png`,
+      { frameWidth: 768, frameHeight: 1024 }
+    );
 
     this.load.spritesheet(
       'tiles_biolab',
