@@ -481,9 +481,10 @@ export class GameScene extends Phaser.Scene {
     const moveSpeed = 125;
     const keyboardMoveX = (this.keys.right.isDown ? 1 : 0) - (this.keys.left.isDown ? 1 : 0);
     const gamepadMoveX = this.getMoveX();
-    const moveX = gamepadMoveX !== 0 ? gamepadMoveX : keyboardMoveX;
+    const moveXRaw = gamepadMoveX !== 0 ? gamepadMoveX : keyboardMoveX;
+    const moveX = moveXRaw === 0 ? 0 : moveXRaw > 0 ? 1 : -1;
 
-    this.player.setVelocityX(moveX * moveSpeed);
+    this.player.setVelocityX(Math.round(moveX * moveSpeed));
     if (moveX < 0) {
       this.playerState.facing = -1;
       this.player.setFrame(0);
