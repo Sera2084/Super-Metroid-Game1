@@ -20,8 +20,8 @@ const config = {
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
-    width: 400,
-    height: 225
+    width: 640,
+    height: 360
   },
   pixelArt: true,
   roundPixels: true,
