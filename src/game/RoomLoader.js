@@ -114,6 +114,7 @@ export class RoomLoader {
       this.scene.bullets,
       this.scene.roomCollisionLayer,
       (bullet) => {
+        this.scene.lastErrorText?.setText(`BulletHitTile @ ${Math.round(bullet.x)},${Math.round(bullet.y)}`);
         bullet.disableBody(true, true);
       }
     );

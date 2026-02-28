@@ -339,6 +339,13 @@ export class GameScene extends Phaser.Scene {
     bullet.body.setAllowGravity(false);
     bullet.body.setGravity(0, 0);
     bullet.body.setImmovable(true);
+    bullet.body.setSize(6, 6, true);
+    if (bullet.body?.checkCollision) {
+      bullet.body.checkCollision.none = true;
+      this.time.delayedCall(0, () => {
+        if (bullet.active && bullet.body?.checkCollision) bullet.body.checkCollision.none = false;
+      });
+    }
     bullet.setAllowGravity(false);
     bullet.setDrag(0, 0);
     bullet.setFriction(0, 0);
@@ -347,7 +354,6 @@ export class GameScene extends Phaser.Scene {
     bullet.setVelocityX(facing * 520);
     bullet.setMaxVelocity(520, 0);
     bullet.setDepth(10);
-    bullet.body?.setSize(bullet.width, bullet.height, true);
     if (bullet.body?.checkCollision) {
       bullet.body.checkCollision.up = false;
       bullet.body.checkCollision.down = false;
@@ -365,9 +371,9 @@ export class GameScene extends Phaser.Scene {
   getBulletSpawn(player, facing) {
     const body = player?.body;
     const dir = facing >= 0 ? 1 : -1;
-    const pad = 4;
+    const pad = 8;
     let spawnX = player.x + dir * ((body?.halfWidth ?? 8) + pad);
-    const spawnY = player.y - ((body?.halfHeight ?? 12) * 0.15);
+    const spawnY = player.y - ((body?.halfHeight ?? 12) * 0.55);
 
     if (this.roomCollisionLayer?.getTileAtWorldXY) {
       for (let i = 0; i < 2; i += 1) {
