@@ -48,8 +48,8 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     const nextFrame = this.direction < 0 ? 0 : 1;
     if (nextFrame !== this.lastFacingFrame) {
       this.setFacingFrame(this.direction);
-      this.alignBodyToFeet(18, 14);
-      this.scene?.alignFeetToBody?.(this, 0);
+      const ENEMY_FOOT_PAD_WORLD = 45;
+      this.scene?.setupFeetBody?.(this, 18, 14, ENEMY_FOOT_PAD_WORLD);
       this.lastFacingFrame = nextFrame;
     }
   }
@@ -60,19 +60,6 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     } else {
       this.setFrame(dir < 0 ? RIGHT_FRAME : LEFT_FRAME);
     }
-  }
-
-  alignBodyToFeet(bodyWWorld = 18, bodyHWorld = 14) {
-    if (!this.body || !this.frame) return;
-    const scale = this.scaleX || 1;
-    const bodyW = Math.max(2, Math.round(bodyWWorld / scale));
-    const bodyH = Math.max(2, Math.round(bodyHWorld / scale));
-    const fw = this.frame.width;
-    const fh = this.frame.height;
-    const offX = Math.round((fw - bodyW) / 2);
-    const offY = Math.round(fh - bodyH);
-    this.body.setSize(bodyW, bodyH, false);
-    this.body.setOffset(offX, offY);
   }
 
   takeDamage(amount = 1, knockbackDir = 0) {

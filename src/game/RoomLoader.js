@@ -87,11 +87,9 @@ export class RoomLoader {
       const pScale = this.scene.player?.scaleX ?? 0.07;
       const enemyScale = pScale * 0.95;
       enemy.setScale(enemyScale);
-      enemy.alignBodyToFeet?.(18, 14);
+      const ENEMY_FOOT_PAD_WORLD = 45;
+      this.scene.setupFeetBody?.(enemy, 18, 14, ENEMY_FOOT_PAD_WORLD);
       this.scene.enemyGroup.add(enemy);
-      this.scene.time.delayedCall(0, () => {
-        this.scene.alignFeetToBody?.(enemy, 0);
-      });
     });
 
     room.doors.forEach((door) => {
@@ -117,14 +115,7 @@ export class RoomLoader {
     });
 
     this.scene.refreshPlayerTileCollider?.();
-    this.scene.time.delayedCall(0, () => {
-      this.scene.alignFeetToBody?.(this.scene.player, 0);
-    });
-    this.scene.enemyTileCollider = this.scene.physics.add.collider(this.scene.enemyGroup, this.scene.roomCollisionLayer, (enemy) => {
-      if (enemy?.body?.blocked?.down) {
-        this.scene.alignFeetToBody?.(enemy, 0);
-      }
-    });
+    this.scene.enemyTileCollider = this.scene.physics.add.collider(this.scene.enemyGroup, this.scene.roomCollisionLayer);
     this.scene.playerEnemyCollider = this.scene.physics.add.overlap(this.scene.player, this.scene.enemyGroup, (player, enemy) => {
       if (this.scene.onPlayerTouchEnemy) {
         this.scene.onPlayerTouchEnemy(player, enemy);
