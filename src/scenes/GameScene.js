@@ -119,16 +119,11 @@ export class GameScene extends Phaser.Scene {
   getMoveX() {
     if (!this.pad || !this.pad.connected) return 0;
 
-    const leftPressed =
-      this.pad.left?.pressed || this.pad.buttons?.[this.gamepadButtons.dpadLeft]?.pressed || false;
-    const rightPressed =
-      this.pad.right?.pressed || this.pad.buttons?.[this.gamepadButtons.dpadRight]?.pressed || false;
+    const leftPressed = Boolean(this.pad.buttons?.[this.gamepadButtons.dpadLeft]?.pressed);
+    const rightPressed = Boolean(this.pad.buttons?.[this.gamepadButtons.dpadRight]?.pressed);
 
     if (leftPressed && !rightPressed) return -1;
     if (rightPressed && !leftPressed) return 1;
-
-    const dpadAxisMove = this.getDpadAxisMoveX();
-    if (dpadAxisMove !== 0) return dpadAxisMove;
 
     const stickX = this.getAxisValue(this.gamepadButtons.stickX);
     if (Math.abs(stickX) < this.gamepadDeadzone) return 0;
@@ -140,21 +135,6 @@ export class GameScene extends Phaser.Scene {
     const axis = this.pad.axes?.[index];
     const value = axis?.getValue ? axis.getValue() : axis?.value ?? 0;
     return Number.isFinite(value) ? value : 0;
-  }
-
-  getDpadAxisMoveX() {
-    // Some non-standard pads expose D-Pad as axis 6 (-1 left / +1 right).
-    const axis6 = this.getAxisValue(6);
-    if (Math.abs(axis6) >= this.gamepadDeadzone) {
-      return axis6 > 0 ? 1 : -1;
-    }
-
-    // POV hat fallback (often axis 9 on Windows/Chrome).
-    const axis9 = this.getAxisValue(9);
-    if (axis9 >= 0.25) return -1;
-    if (axis9 <= -0.25 && axis9 >= -0.85) return 1;
-    if (Math.abs(Math.abs(axis9) - 1) <= 0.12) return axis9 > 0 ? 1 : -1;
-    return 0;
   }
 
   refreshConnectedPad(forceHud = false) {
