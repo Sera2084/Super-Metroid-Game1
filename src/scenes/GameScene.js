@@ -497,10 +497,9 @@ export class GameScene extends Phaser.Scene {
     if (this.pad && this.pad.connected) {
       const mapping = this.pad.mapping || 'unknown';
       const buttonCount = this.pad.buttons?.length ?? 0;
-      const axisCount = this.pad.axes?.length ?? 0;
-      this.gamepadDetailsText.setText(`Pad: ${this.pad.id} | mapping: ${mapping} | buttons: ${buttonCount} | axes: ${axisCount}`);
+      this.gamepadDetailsText.setText(`Pad: ${this.pad.id} | mapping: ${mapping} | buttons: ${buttonCount}`);
     } else {
-      this.gamepadDetailsText.setText('Pad: none | mapping: n/a | buttons: 0 | axes: 0');
+      this.gamepadDetailsText.setText('Pad: none | mapping: n/a | buttons: 0');
       this.lastPressedButtonIndex = -1;
     }
     this.lastErrorText.setText(`LastError: ${this.lastErrorMessage || 'none'}`);
