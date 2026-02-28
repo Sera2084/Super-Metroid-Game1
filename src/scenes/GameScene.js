@@ -44,9 +44,9 @@ export class GameScene extends Phaser.Scene {
     });
 
     // Player wird zentral erzeugt und in jedem Raum nur repositioniert.
-    this.player = this.physics.add.sprite(64, 64, 'player');
-    this.player.body.setSize(12, 14);
-    this.player.body.setOffset(2, 2);
+    this.player = this.physics.add.sprite(64, 64, 'player', 1);
+    this.player.setScale(0.08);
+    this.player.body.setSize(24, 40, true);
     this.player.setCollideWorldBounds(true);
 
     this.bulletsGroup = this.physics.add.group({
@@ -414,6 +414,7 @@ export class GameScene extends Phaser.Scene {
     this.player.setVelocityX(moveX * moveSpeed);
     if (moveX !== 0) {
       this.playerState.facing = moveX > 0 ? 1 : -1;
+      this.player.setFrame(this.playerState.facing < 0 ? 0 : 1);
     }
 
     const jumpPressed =
@@ -436,7 +437,6 @@ export class GameScene extends Phaser.Scene {
       body.allowGravity = true;
     }
 
-    this.player.setFlipX(this.playerState.facing < 0);
   }
 
   updateHud() {

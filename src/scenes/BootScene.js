@@ -9,6 +9,12 @@ export class BootScene extends Phaser.Scene {
     const base = import.meta.env.BASE_URL;
 
     this.load.spritesheet(
+      'player',
+      `${base}assets/sprites/player_pair.png`,
+      { frameWidth: 768, frameHeight: 1024 }
+    );
+
+    this.load.spritesheet(
       'tiles_biolab',
       `${base}assets/tilesets/alien_biolab_tileset.png`,
       { frameWidth: 16, frameHeight: 16 }
@@ -22,13 +28,6 @@ export class BootScene extends Phaser.Scene {
 
   createTextures() {
     const g = this.make.graphics({ x: 0, y: 0, add: false });
-
-    g.clear();
-    g.fillStyle(0x8bcf7b, 1);
-    g.fillRect(0, 0, 16, 16);
-    g.fillStyle(0x5b9450, 1);
-    g.fillRect(0, 10, 16, 6);
-    g.generateTexture('player', 16, 16);
 
     g.clear();
     g.fillStyle(0xd95d39, 1);
