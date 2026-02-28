@@ -28,8 +28,6 @@ const config = {
     width: 640,
     height: 360
   },
-  pixelArt: true,
-  roundPixels: true,
   scene: [BootScene, GameScene]
 };
 
