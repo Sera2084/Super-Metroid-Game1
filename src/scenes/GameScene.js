@@ -164,7 +164,7 @@ export class GameScene extends Phaser.Scene {
   alignFeetToBody(sprite, fudgeWorld = 0) {
     if (!sprite?.body) return;
     sprite.setOrigin(0.5, 1);
-    const desiredY = sprite.body.bottom + fudgeWorld;
+    const desiredY = Math.round(sprite.body.bottom + fudgeWorld);
     const dy = desiredY - sprite.y;
     if (Math.abs(dy) > 0.5) {
       sprite.y = desiredY;
