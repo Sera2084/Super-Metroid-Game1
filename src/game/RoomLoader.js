@@ -67,7 +67,6 @@ export class RoomLoader {
       throw new Error('Tileset "tiles_biolab" konnte nicht erstellt werden.');
     }
     const collisionLayer = tilemap.createLayer(0, biolabTileset, 0, 0);
-    collisionLayer.setCollisionByProperty({ collides: true }, true);
     collisionLayer.setCollisionByExclusion([-1], true);
 
     this.scene.roomTilemap = tilemap;
