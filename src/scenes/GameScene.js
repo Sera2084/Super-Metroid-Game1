@@ -375,6 +375,7 @@ export class GameScene extends Phaser.Scene {
     const spawn = this.getBulletSpawn(this.player, dir);
     const bullet = this.physics.add.image(spawn.x, spawn.y, 'bullet');
     if (!bullet || !bullet.body) return;
+    bullet.setPosition(spawn.x, spawn.y);
     bullet.setActive(true).setVisible(true);
     bullet.setDepth(10);
     const body = bullet.body;
@@ -385,8 +386,8 @@ export class GameScene extends Phaser.Scene {
     body.gravity.y = 0;
     body.setDrag(0, 0);
     body.setBounce(0, 0);
-    const speed = 520;
-    bullet.vx = dir * speed;
+    const BULLET_SPEED = 520;
+    bullet.vx = dir * BULLET_SPEED;
     body.velocity.x = bullet.vx;
     body.velocity.y = 0;
     if (body.setVelocity) body.setVelocity(bullet.vx, 0);
@@ -409,8 +410,12 @@ export class GameScene extends Phaser.Scene {
   getBulletSpawn(player, facing) {
     const body = player?.body;
     const dir = facing >= 0 ? 1 : -1;
-    const spawnX = (body?.center?.x ?? player.x) + dir * ((body?.halfWidth ?? 8) + 10);
-    const spawnY = (body?.center?.y ?? player.y) - Math.round((body?.halfHeight ?? 12) * 0.25);
+    if (!body) {
+      return { x: player.x + dir * 12, y: player.y - 10 };
+    }
+    const pad = 6;
+    const spawnX = dir > 0 ? body.right + pad : body.left - pad;
+    const spawnY = body.center.y - body.height * 0.25;
     return { x: spawnX, y: spawnY };
   }
 

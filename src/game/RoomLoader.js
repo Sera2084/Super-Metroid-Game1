@@ -12,22 +12,24 @@ export class RoomLoader {
     this.transitionLock = false;
   }
 
-  clearCurrentRoom() {
-    const removeCollider = (key) => {
-      const collider = this.scene[key];
-      if (collider) {
-        this.scene.physics.world.removeCollider(collider);
-        this.scene[key] = null;
-      }
-    };
+  safelyRemoveCollider(key) {
+    const collider = this.scene[key];
+    if (!collider) return;
+    const world = this.scene.physics?.world;
+    if (world && !collider.destroyed) {
+      world.removeCollider(collider);
+    }
+    this.scene[key] = null;
+  }
 
-    removeCollider('playerTileCollider');
-    removeCollider('enemyTileCollider');
-    removeCollider('playerEnemyCollider');
-    removeCollider('playerDoorOverlap');
-    removeCollider('playerItemOverlap');
-    removeCollider('bulletEnemyOverlap');
-    removeCollider('bulletTileCollider');
+  clearCurrentRoom() {
+    this.safelyRemoveCollider('playerTileCollider');
+    this.safelyRemoveCollider('enemyTileCollider');
+    this.safelyRemoveCollider('playerEnemyCollider');
+    this.safelyRemoveCollider('playerDoorOverlap');
+    this.safelyRemoveCollider('playerItemOverlap');
+    this.safelyRemoveCollider('bulletEnemyOverlap');
+    this.safelyRemoveCollider('bulletTileCollider');
 
     this.scene.roomCollisionLayer?.destroy();
     this.scene.roomTilemap?.destroy();
@@ -37,10 +39,7 @@ export class RoomLoader {
   }
 
   loadRoom(roomId, spawnId = 'start') {
-    if (this.scene.bulletTileCollider) {
-      this.scene.physics.world.removeCollider(this.scene.bulletTileCollider);
-      this.scene.bulletTileCollider = null;
-    }
+    this.safelyRemoveCollider('bulletTileCollider');
 
     const room = this.roomProvider(roomId);
     if (!room) {
@@ -124,10 +123,7 @@ export class RoomLoader {
         enemy.hurt();
       }
     );
-    if (this.scene.bulletTileCollider) {
-      this.scene.physics.world.removeCollider(this.scene.bulletTileCollider);
-      this.scene.bulletTileCollider = null;
-    }
+    this.safelyRemoveCollider('bulletTileCollider');
     this.scene.bulletTileCollider = this.scene.physics.add.overlap(
       this.scene.bulletsGroup,
       this.scene.roomCollisionLayer,
