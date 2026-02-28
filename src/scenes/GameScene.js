@@ -332,29 +332,29 @@ export class GameScene extends Phaser.Scene {
     const bullet = this.bullets.get(spawn.x, spawn.y, 'bullet');
     if (!bullet) return;
 
-    bullet.enableBody(true, spawn.x, spawn.y, true, true);
-    bullet.spawnTime = this.time.now;
+    bullet.setActive(true).setVisible(true);
+    if (!bullet.body) this.physics.world.enable(bullet);
+    if (!bullet.body) return;
+
     bullet.body.enable = true;
-    if (bullet.body) {
-      bullet.body.allowGravity = false;
-      bullet.body.setAllowGravity(false);
-      bullet.body.setGravity(0, 0);
-      bullet.body.setVelocityY(0);
-      bullet.body.setSize(6, 6, true);
-    }
+    bullet.body.reset(spawn.x, spawn.y);
     bullet.setAllowGravity(false);
     bullet.setDrag(0, 0);
     bullet.setFriction(0, 0);
     bullet.setBounce(0, 0);
-    bullet.setVelocity(0, 0);
-    bullet.setVelocityX(facing * 520);
-    bullet.setMaxVelocity(520, 0);
+    bullet.setImmovable(false);
+    bullet.body.setAllowGravity(false);
+    bullet.body.setGravity(0, 0);
+    bullet.body.setSize(6, 6, true);
+    const dir = this.playerState.facing >= 0 ? 1 : -1;
+    bullet.setVelocity(dir * 520, 0);
     bullet.setDepth(10);
     if (bullet.body?.checkCollision) {
       bullet.body.checkCollision.up = false;
       bullet.body.checkCollision.down = false;
     }
     bullet.setCollideWorldBounds(false);
+    bullet.spawnTime = this.time.now;
     bullet.lifespan = 800;
     this.lastShotAt = now;
     this.pewText.setText('PEW!');
@@ -477,7 +477,7 @@ export class GameScene extends Phaser.Scene {
         this.tryShoot();
       }
       this.bullets.children.iterate((bullet) => {
-        if (!bullet?.active) return;
+        if (!bullet?.active || !bullet.body) return;
         if (typeof bullet.lifespan !== 'number') return;
         bullet.lifespan -= delta;
         if (bullet.lifespan <= 0) {
