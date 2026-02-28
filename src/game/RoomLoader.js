@@ -76,13 +76,16 @@ export class RoomLoader {
     this.scene.cameras.main.setBounds(0, 0, room.width * TILE_SIZE, room.height * TILE_SIZE);
 
     const spawn = room.spawnPoints[spawnId] ?? room.spawnPoints.start;
-    const spawnPx = tileToPixel(spawn.tileX, spawn.tileY);
+    const spawnPx = {
+      x: spawn.tileX * TILE_SIZE + TILE_SIZE / 2,
+      y: (spawn.tileY + 1) * TILE_SIZE
+    };
     this.scene.player.setPosition(spawnPx.x, spawnPx.y);
     this.scene.setWorldHitbox?.(this.scene.player, 26, 44);
 
     room.enemySpawns.forEach((spawnDef) => {
       const startX = tileToPixel(spawnDef.tileX, spawnDef.tileY).x;
-      const startY = spawnDef.tileY * TILE_SIZE;
+      const startY = (spawnDef.tileY + 1) * TILE_SIZE;
       const min = tileToPixel(spawnDef.patrolMinTileX, spawnDef.tileY);
       const max = tileToPixel(spawnDef.patrolMaxTileX, spawnDef.tileY);
       const enemy = this.scene.createEnemy(startX, startY, min.x, max.x);
