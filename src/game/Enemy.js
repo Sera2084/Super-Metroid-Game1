@@ -44,9 +44,22 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     const nextFrame = this.direction < 0 ? 0 : 1;
     if (nextFrame !== this.lastFacingFrame) {
       this.setFrame(nextFrame);
-      this.scene?.alignBodyFeet?.(this, 18, 14, 0);
+      this.alignBodyToFeet(18, 14);
       this.lastFacingFrame = nextFrame;
     }
+  }
+
+  alignBodyToFeet(bodyWWorld = 18, bodyHWorld = 14) {
+    if (!this.body || !this.frame) return;
+    const scale = this.scaleX || 1;
+    const bodyW = Math.max(2, Math.round(bodyWWorld / scale));
+    const bodyH = Math.max(2, Math.round(bodyHWorld / scale));
+    const fw = this.frame.width;
+    const fh = this.frame.height;
+    const offX = Math.round((fw - bodyW) / 2);
+    const offY = Math.round(fh - bodyH);
+    this.body.setSize(bodyW, bodyH, false);
+    this.body.setOffset(offX, offY);
   }
 
   takeDamage(amount = 1, knockbackDir = 0) {
