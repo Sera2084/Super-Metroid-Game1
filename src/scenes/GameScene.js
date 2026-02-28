@@ -32,6 +32,7 @@ export class GameScene extends Phaser.Scene {
 
   create() {
     this.gameState = new GameState();
+    console.log("WORLD GRAVITY:", this.physics.world.gravity.y);
 
     this.cursors = this.input.keyboard.createCursorKeys();
     this.keys = this.input.keyboard.addKeys({
