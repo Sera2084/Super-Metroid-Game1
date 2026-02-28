@@ -18,6 +18,10 @@ const config = {
     keyboard: true,
     gamepad: true
   },
+  render: {
+    pixelArt: true,
+    roundPixels: true
+  },
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,

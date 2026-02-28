@@ -34,6 +34,7 @@ export class GameScene extends Phaser.Scene {
   create() {
     this.gameState = new GameState();
     this.physics.world.gravity.y = 600;
+    this._debugPhysics = false;
 
     this.cursors = this.input.keyboard.createCursorKeys();
     this.keys = this.input.keyboard.addKeys({
@@ -96,17 +97,36 @@ export class GameScene extends Phaser.Scene {
     this.cameras.main.roundPixels = true;
     this.cameras.main.setRoundPixels(true);
     this.scale.on('resize', this.updateCameraZoomToFit, this);
+    this.onF2ToggleDebug = () => {
+      this.setPhysicsDebugEnabled(!this._debugPhysics);
+    };
+    this.input.keyboard?.on('keydown-F2', this.onF2ToggleDebug);
 
     this.applyGameStateToPlayer();
     this.updateHud();
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.scale.off('resize', this.updateCameraZoomToFit, this);
       this.gamepadPollEvent?.remove(false);
+      this.input.keyboard?.off('keydown-F2', this.onF2ToggleDebug);
       if (typeof window !== 'undefined') {
         if (this.onWindowError) window.removeEventListener('error', this.onWindowError);
         if (this.onUnhandledRejection) window.removeEventListener('unhandledrejection', this.onUnhandledRejection);
       }
     });
+  }
+
+  setPhysicsDebugEnabled(enabled) {
+    const world = this.physics?.world;
+    if (!world) return;
+    this._debugPhysics = Boolean(enabled);
+    world.drawDebug = this._debugPhysics;
+    if (this._debugPhysics && !world.debugGraphic) {
+      world.createDebugGraphic();
+    }
+    if (world.debugGraphic) {
+      world.debugGraphic.clear();
+      world.debugGraphic.visible = this._debugPhysics;
+    }
   }
 
   updateCameraZoomToFit() {
