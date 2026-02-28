@@ -120,7 +120,12 @@ export class RoomLoader {
       this.scene.enemyGroup,
       (bullet, enemy) => {
         if (bullet?.active) bullet.destroy();
-        enemy.hurt();
+        const dir = bullet?.body?.velocity?.x >= 0 ? 1 : -1;
+        if (enemy?.takeDamage) {
+          enemy.takeDamage(1, dir);
+        } else if (enemy?.hurt) {
+          enemy.hurt();
+        }
       }
     );
     this.safelyRemoveCollider('bulletTileCollider');
