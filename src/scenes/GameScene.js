@@ -335,6 +335,10 @@ export class GameScene extends Phaser.Scene {
 
     bullet.enableBody(true, spawn.x, spawn.y, true, true);
     bullet.body.enable = true;
+    bullet.body.allowGravity = false;
+    bullet.body.setAllowGravity(false);
+    bullet.body.setGravity(0, 0);
+    bullet.body.setImmovable(true);
     bullet.setAllowGravity(false);
     bullet.setDrag(0, 0);
     bullet.setFriction(0, 0);
