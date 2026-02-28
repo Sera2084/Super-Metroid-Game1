@@ -11,15 +11,12 @@ export class GameScene extends Phaser.Scene {
     this.pad = null;
     this.gamepadPrevPressed = new Map();
     this.lastPressedButtonIndex = -1;
-    this.lastAxesPreview = 'n/a';
     this.lastGamepadDebugHudAt = 0;
-    this.gamepadDeadzone = 0.25;
     this.gamepadButtons = {
       jump: 1,
       shoot: 3,
       dpadLeft: 14,
-      dpadRight: 15,
-      stickX: 0
+      dpadRight: 15
     };
     this.playerState = {
       hp: 6,
@@ -164,22 +161,15 @@ export class GameScene extends Phaser.Scene {
   }
 
   setWorldHitbox(sprite, targetWWorld, targetHWorld) {
-    if (!sprite?.body || !sprite.frame) return;
+    if (!sprite?.body) return;
     sprite.setOrigin(0.5, 1);
-    const scale = sprite.scaleX || 1;
     const body = sprite.body;
-    const f = sprite.frame;
-
-    const bodyW = Math.max(2, Math.round(targetWWorld / scale));
-    const bodyH = Math.max(2, Math.round(targetHWorld / scale));
-    const fw = f.width;
-    const fh = f.height;
-    let offX = Math.round((fw - bodyW) / 2);
-    const offY = Math.round(fh - bodyH);
-    offX = Math.max(0, Math.min(offX, Math.max(0, f.width - bodyW)));
-    const offYc = Math.max(0, Math.min(offY, Math.max(0, f.height - bodyH)));
-    body.setSize(bodyW, bodyH, false);
-    body.setOffset(offX, offYc);
+    body.setSize(targetWWorld, targetHWorld, false);
+    const dw = sprite.displayWidth;
+    const dh = sprite.displayHeight;
+    const offX = Math.round((dw - targetWWorld) / 2);
+    const offY = Math.round(dh - targetHWorld);
+    body.setOffset(offX, offY);
   }
 
   createHud() {
@@ -224,7 +214,7 @@ export class GameScene extends Phaser.Scene {
       .setScrollFactor(0);
 
     this.gamepadLiveText = this.add
-      .text(16, 196, 'PadLive: btn=-1 axes=n/a', { fontFamily: 'monospace', fontSize: '11px', color: '#ffd79a' })
+      .text(16, 196, 'PadLive: btn=-1', { fontFamily: 'monospace', fontSize: '11px', color: '#ffd79a' })
       .setScrollFactor(0);
 
     this.pewText = this.add
@@ -279,29 +269,7 @@ export class GameScene extends Phaser.Scene {
 
     if (leftPressed && !rightPressed) return -1;
     if (rightPressed && !leftPressed) return 1;
-
-    const stickX = this.getAxisValue(this.gamepadButtons.stickX);
-    if (Math.abs(stickX) < this.gamepadDeadzone) return 0;
-    return stickX > 0 ? 1 : -1;
-  }
-
-  getAxisValue(index) {
-    if (!this.pad || !this.pad.connected) return 0;
-    const axes = this.pad.axes;
-    if (!Array.isArray(axes) || !Number.isInteger(index) || index < 0 || index >= axes.length) {
-      return 0;
-    }
-    const axis = axes[index];
-    let value = 0;
-    if (typeof axis === 'number') {
-      value = axis;
-    } else if (axis && typeof axis.getValue === 'function') {
-      value = axis.getValue();
-    } else if (axis && typeof axis.value === 'number') {
-      value = axis.value;
-    }
-    if (!Number.isFinite(value)) return 0;
-    return Phaser.Math.Clamp(value, -1, 1);
+    return 0;
   }
 
   getButton(index) {
@@ -361,23 +329,10 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  collectAxesPreview() {
-    if (!this.pad || !this.pad.connected || !Array.isArray(this.pad.axes) || this.pad.axes.length === 0) {
-      return 'n/a';
-    }
-    const limit = Math.min(this.pad.axes.length, 4);
-    const values = [];
-    for (let i = 0; i < limit; i += 1) {
-      values.push(this.getAxisValue(i).toFixed(2));
-    }
-    return values.join(', ');
-  }
-
   updateGamepadLiveHud(force = false) {
     if (!force && this.time.now - this.lastGamepadDebugHudAt < 100) return;
     this.lastGamepadDebugHudAt = this.time.now;
-    this.lastAxesPreview = this.collectAxesPreview();
-    this.gamepadLiveText?.setText(`PadLive: btn=${this.lastPressedButtonIndex} axes=${this.lastAxesPreview}`);
+    this.gamepadLiveText?.setText(`PadLive: btn=${this.lastPressedButtonIndex}`);
   }
 
   /**
@@ -529,7 +484,7 @@ export class GameScene extends Phaser.Scene {
     );
     const status = this.pad && this.pad.connected ? 'connected' : 'disconnected';
     this.gamepadText.setText(
-      `Gamepad: ${status} (B:${this.gamepadButtons.jump} Y:${this.gamepadButtons.shoot} D:${this.gamepadButtons.dpadLeft}/${this.gamepadButtons.dpadRight} AX:${this.gamepadButtons.stickX})`
+      `Gamepad: ${status} (B:${this.gamepadButtons.jump} Y:${this.gamepadButtons.shoot} D:${this.gamepadButtons.dpadLeft}/${this.gamepadButtons.dpadRight})`
     );
     if (this.pad && this.pad.connected) {
       const mapping = this.pad.mapping || 'unknown';

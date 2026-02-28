@@ -48,7 +48,6 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     const nextFrame = this.direction < 0 ? 0 : 1;
     if (nextFrame !== this.lastFacingFrame) {
       this.setFacingFrame(this.direction);
-      this.scene?.setWorldHitbox?.(this, 18, 14);
       this.lastFacingFrame = nextFrame;
     }
   }
