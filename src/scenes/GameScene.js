@@ -52,12 +52,14 @@ export class GameScene extends Phaser.Scene {
     const PLAYER_FRAME_H = 1024;
     const TARGET_BODY_W = 26;
     const TARGET_BODY_H = 44;
+    const BODY_TWEAK_WORLD_Y = 3;
     const scale = this.player.scaleX;
     const bodyW = Math.max(1, Math.round(TARGET_BODY_W / scale));
     const bodyH = Math.max(1, Math.round(TARGET_BODY_H / scale));
+    const tweakY = Math.round(BODY_TWEAK_WORLD_Y / scale);
     this.player.body.setSize(bodyW, bodyH, false);
     const offX = Math.round((PLAYER_FRAME_W - bodyW) / 2);
-    const offY = Math.round(PLAYER_FRAME_H - bodyH);
+    const offY = Math.round(PLAYER_FRAME_H - bodyH + tweakY);
     this.player.body.setOffset(offX, offY);
     this.player.setFrame(0);
     this.player.setFlipX(false);
