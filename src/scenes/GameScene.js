@@ -165,24 +165,26 @@ export class GameScene extends Phaser.Scene {
 
     sprite.setOrigin(0.5, 1);
 
+    const scaleX = Math.abs(sprite.scaleX || 1);
+    const scaleY = Math.abs(sprite.scaleY || 1);
+    if (scaleX <= 0 || scaleY <= 0) return;
+
     const body = sprite.body;
 
-    // Größe in WORLD-Pixeln (so wie übergeben: 26x44 etc.)
-    const w = Math.max(1, Math.round(targetWWorld));
-    const h = Math.max(1, Math.round(targetHWorld));
+    // Arcade Body size/offset in unscaled frame pixels.
+    const w = Math.max(1, Math.round(targetWWorld / scaleX));
+    const h = Math.max(1, Math.round(targetHWorld / scaleY));
 
     body.setSize(w, h, false);
 
-    // Offsets in WORLD-Pixeln basierend auf sichtbarer (skalierter) Größe
-    const dw = sprite.displayWidth;
-    const dh = sprite.displayHeight;
+    const fw = sprite.width;
+    const fh = sprite.height;
 
-    const offX = Math.round((dw - w) / 2);
-    const offY = Math.round(dh - h);
+    const offX = Math.round((fw - w) / 2);
+    const offY = Math.round(fh - h);
 
     body.setOffset(offX, offY);
 
-    // Optional – nur falls vorhanden
     if (typeof body.updateFromGameObject === 'function') {
       body.updateFromGameObject();
     }
