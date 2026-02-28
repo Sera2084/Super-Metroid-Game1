@@ -60,7 +60,8 @@ export class RoomLoader {
       throw new Error('Tileset "tiles_biolab" konnte nicht erstellt werden.');
     }
     const collisionLayer = tilemap.createLayer(0, biolabTileset, 0, 0);
-    collisionLayer.setCollision([0]);
+    collisionLayer.setCollisionByProperty({ collides: true });
+    collisionLayer.setCollisionByExclusion([-1], true);
 
     this.scene.roomTilemap = tilemap;
     this.scene.roomCollisionLayer = collisionLayer;
@@ -71,6 +72,7 @@ export class RoomLoader {
     const spawn = room.spawnPoints[spawnId] ?? room.spawnPoints.start;
     const spawnPx = tileToPixel(spawn.tileX, spawn.tileY);
     this.scene.player.setPosition(spawnPx.x, spawnPx.y);
+    this.scene.snapPlayerToGround?.();
 
     room.enemySpawns.forEach((spawnDef) => {
       const start = tileToPixel(spawnDef.tileX, spawnDef.tileY);

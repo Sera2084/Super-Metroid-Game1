@@ -56,6 +56,7 @@ export class GameScene extends Phaser.Scene {
     this.player.setFrame(0);
     this.player.setFlipX(false);
     this.player.setCollideWorldBounds(true);
+    this.snapPlayerToGround();
 
     this.bulletsGroup = this.physics.add.group({
       allowGravity: false
@@ -91,6 +92,10 @@ export class GameScene extends Phaser.Scene {
 
     this.roomLoader = new RoomLoader(this, getRoomById, this.gameState);
     this.roomLoader.loadRoom('room_01', 'start');
+    this.snapPlayerToGround();
+    if (this.roomCollisionLayer && !this.playerTileCollider) {
+      this.playerTileCollider = this.physics.add.collider(this.player, this.roomCollisionLayer);
+    }
     this.updateCameraZoomToFit();
     this.cameras.main.centerOn(this.player.x, this.player.y);
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
@@ -120,6 +125,24 @@ export class GameScene extends Phaser.Scene {
     const zoomY = Math.floor(visibleHeight / (TARGET_TILES_Y * TILE_SIZE));
     const nextZoom = Phaser.Math.Clamp(Math.min(zoomX, zoomY), 1, MAX_ZOOM);
     this.cameras.main.setZoom(nextZoom);
+  }
+
+  snapPlayerToGround(maxScanPx = 256) {
+    if (!this.roomCollisionLayer || !this.player?.body) return;
+    const x = this.player.x;
+    const startY = this.player.y - 64;
+    const step = 4;
+
+    for (let dy = 0; dy <= maxScanPx; dy += step) {
+      const y = startY + dy;
+      const tile = this.roomCollisionLayer.getTileAtWorldXY(x, y, true);
+      if (tile && tile.collides) {
+        const topY = tile.pixelY;
+        this.player.y = topY - 1;
+        this.player.body.velocity.y = 0;
+        return;
+      }
+    }
   }
 
   createHud() {
