@@ -49,7 +49,10 @@ export class GameScene extends Phaser.Scene {
     this.player.setCollideWorldBounds(true);
 
     this.bullets = this.physics.add.group({
-      allowGravity: false
+      classType: Phaser.Physics.Arcade.Image,
+      runChildUpdate: false,
+      allowGravity: false,
+      immovable: true
     });
 
     this.createHud();
@@ -159,6 +162,10 @@ export class GameScene extends Phaser.Scene {
 
     this.pewText = this.add
       .text(16, 212, '', { fontFamily: 'monospace', fontSize: '12px', color: '#fff176' })
+      .setScrollFactor(0);
+
+    this.shotsText = this.add
+      .text(16, 228, 'Shots: 0', { fontFamily: 'monospace', fontSize: '11px', color: '#ffcf8a' })
       .setScrollFactor(0);
   }
 
@@ -322,29 +329,51 @@ export class GameScene extends Phaser.Scene {
     const now = this.time.now;
     if (this.lastShotAt && now < this.lastShotAt + 150) return;
     const facing = this.playerState.facing >= 0 ? 1 : -1;
-    const spawnX = this.player.x + facing * 14;
-    const spawnY = this.player.y - 4;
-    const bullet = this.physics.add.image(spawnX, spawnY, 'bullet');
+    const spawn = this.getBulletSpawn(this.player, facing);
+    const bullet = this.bullets.get(spawn.x, spawn.y, 'bullet');
     if (!bullet) return;
 
+    bullet.enableBody(true, spawn.x, spawn.y, true, true);
+    bullet.body.enable = true;
     bullet.setAllowGravity(false);
-    bullet.setVelocityX(facing * 420);
+    bullet.setDrag(0, 0);
+    bullet.setFriction(0, 0);
+    bullet.setBounce(0, 0);
+    bullet.setVelocity(0, 0);
+    bullet.setVelocityX(facing * 520);
+    bullet.setMaxVelocity(520, 0);
     bullet.setDepth(10);
     bullet.body?.setSize(bullet.width, bullet.height, true);
+    if (bullet.body?.checkCollision) {
+      bullet.body.checkCollision.up = false;
+      bullet.body.checkCollision.down = false;
+    }
     bullet.setCollideWorldBounds(false);
-    this.bullets.add(bullet);
+    bullet.lifespan = 800;
     this.lastShotAt = now;
     this.pewText.setText('PEW!');
+    this.shotsText.setText(`Shots: ${this.bullets.countActive(true)}`);
     this.time.delayedCall(200, () => {
       if (this.pewText?.active) this.pewText.setText('');
     });
+  }
 
-    this.time.delayedCall(800, () => {
-      if (bullet.active) {
-        bullet.disableBody(true, true);
+  getBulletSpawn(player, facing) {
+    const body = player?.body;
+    const dir = facing >= 0 ? 1 : -1;
+    const pad = 4;
+    let spawnX = player.x + dir * ((body?.halfWidth ?? 8) + pad);
+    const spawnY = player.y - ((body?.halfHeight ?? 12) * 0.15);
+
+    if (this.roomCollisionLayer?.getTileAtWorldXY) {
+      for (let i = 0; i < 2; i += 1) {
+        const tile = this.roomCollisionLayer.getTileAtWorldXY(spawnX, spawnY, true);
+        if (!tile?.collides) break;
+        spawnX += dir * 16;
       }
-      bullet.destroy();
-    });
+    }
+
+    return { x: spawnX, y: spawnY };
   }
 
   damagePlayer(amount) {
@@ -433,7 +462,7 @@ export class GameScene extends Phaser.Scene {
     this.updateGamepadLiveHud(true);
   }
 
-  update() {
+  update(_time, delta) {
     try {
       this.handleMovement();
       this.captureLastPressedButton();
@@ -441,6 +470,14 @@ export class GameScene extends Phaser.Scene {
       if (shootPressed) {
         this.tryShoot();
       }
+      this.bullets.children.iterate((bullet) => {
+        if (!bullet?.active) return;
+        bullet.lifespan = (bullet.lifespan ?? 0) - delta;
+        if (bullet.lifespan <= 0) {
+          bullet.disableBody(true, true);
+        }
+      });
+      this.shotsText.setText(`Shots: ${this.bullets.countActive(true)}`);
       this.updateGamepadLiveHud();
       if (this.player.y > this.physics.world.bounds.height + 60) {
         this.damagePlayer(99);
