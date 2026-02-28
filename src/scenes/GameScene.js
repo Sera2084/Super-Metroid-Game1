@@ -8,7 +8,6 @@ export class GameScene extends Phaser.Scene {
   constructor() {
     super('GameScene');
     this.pad = null;
-    this.lastGamepadPollAt = 0;
     this.gamepadDeadzone = 0.25;
     this.gamepadButtons = {
       jump: 1,
@@ -51,6 +50,7 @@ export class GameScene extends Phaser.Scene {
     });
 
     this.createHud();
+    this.installErrorReporting();
 
     const gamepadPlugin = this.input.gamepad;
     if (gamepadPlugin) {
@@ -65,6 +65,15 @@ export class GameScene extends Phaser.Scene {
         }
         this.refreshConnectedPad(true);
       });
+      this.gamepadPollEvent = this.time.addEvent({
+        delay: 1000,
+        loop: true,
+        callback: () => {
+          if (!this.pad || !this.pad.connected) {
+            this.refreshConnectedPad(true);
+          }
+        }
+      });
     }
 
     this.roomLoader = new RoomLoader(this, getRoomById, this.gameState);
@@ -77,7 +86,14 @@ export class GameScene extends Phaser.Scene {
 
     this.applyGameStateToPlayer();
     this.updateHud();
-
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.scale.off('resize', this.updateCameraZoomToFit, this);
+      this.gamepadPollEvent?.remove(false);
+      if (typeof window !== 'undefined') {
+        if (this.onWindowError) window.removeEventListener('error', this.onWindowError);
+        if (this.onUnhandledRejection) window.removeEventListener('unhandledrejection', this.onUnhandledRejection);
+      }
+    });
   }
 
   updateCameraZoomToFit() {
@@ -129,6 +145,44 @@ export class GameScene extends Phaser.Scene {
         color: '#c9d6ff'
       })
       .setScrollFactor(0);
+
+    this.lastErrorText = this.add
+      .text(16, 180, 'LastError: none', { fontFamily: 'monospace', fontSize: '11px', color: '#ff8e8e' })
+      .setScrollFactor(0);
+  }
+
+  installErrorReporting() {
+    if (typeof window === 'undefined') return;
+    this.onWindowError = (event) => {
+      this.reportError(event?.error ?? event?.message ?? 'Unknown window error');
+    };
+    this.onUnhandledRejection = (event) => {
+      this.reportError(event?.reason ?? 'Unhandled promise rejection');
+    };
+    window.addEventListener('error', this.onWindowError);
+    window.addEventListener('unhandledrejection', this.onUnhandledRejection);
+  }
+
+  reportError(errorLike) {
+    let text = 'Unknown error';
+    if (errorLike instanceof Error) {
+      text = errorLike.message || errorLike.toString();
+    } else if (typeof errorLike === 'string') {
+      text = errorLike;
+    } else if (errorLike && typeof errorLike === 'object') {
+      try {
+        text = JSON.stringify(errorLike);
+      } catch {
+        text = String(errorLike);
+      }
+    } else if (errorLike != null) {
+      text = String(errorLike);
+    }
+    const normalized = text.replace(/\s+/g, ' ').trim();
+    const shortened = normalized.length > 90 ? `${normalized.slice(0, 87)}...` : normalized;
+    this.lastErrorMessage = shortened || 'Unknown error';
+    console.error('[GameScene] Runtime error:', errorLike);
+    this.lastErrorText?.setText(`LastError: ${this.lastErrorMessage}`);
   }
 
   getMoveX() {
@@ -284,20 +338,19 @@ export class GameScene extends Phaser.Scene {
     } else {
       this.gamepadDetailsText.setText('Pad: none | mapping: n/a | buttons: 0 | axes: 0');
     }
+    this.lastErrorText.setText(`LastError: ${this.lastErrorMessage || 'none'}`);
   }
 
   update() {
-    if (!this.pad || !this.pad.connected) {
-      if (this.time.now - this.lastGamepadPollAt >= 1000) {
-        this.lastGamepadPollAt = this.time.now;
-        this.refreshConnectedPad(true);
+    try {
+      this.handleMovement();
+      const shootPressed = Phaser.Input.Keyboard.JustDown(this.keys.shoot) || this.isShootJustDown();
+      if (shootPressed) {
+        this.tryShoot();
       }
-    }
-
-    this.handleMovement();
-    const shootPressed = Phaser.Input.Keyboard.JustDown(this.keys.shoot) || this.isShootJustDown();
-    if (shootPressed) {
-      this.tryShoot();
+    } catch (error) {
+      this.reportError(error);
+      return;
     }
 
     if (this.player.y > this.physics.world.bounds.height + 60) {
