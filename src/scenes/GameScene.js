@@ -8,6 +8,7 @@ export class GameScene extends Phaser.Scene {
   constructor() {
     super('GameScene');
     this.pad = null;
+    this.lastGamepadPollAt = 0;
     this.gamepadDeadzone = 0.25;
     this.gamepadButtons = {
       jump: 0,
@@ -53,19 +54,16 @@ export class GameScene extends Phaser.Scene {
 
     const gamepadPlugin = this.input.gamepad;
     if (gamepadPlugin) {
-      const connectedPad = gamepadPlugin.gamepads?.find((pad) => pad && pad.connected);
-      if (connectedPad) {
-        this.pad = connectedPad;
-      }
-      gamepadPlugin.once('connected', (pad) => {
+      this.refreshConnectedPad(true);
+      gamepadPlugin.on('connected', (pad) => {
         this.pad = pad;
         this.updateHud();
       });
       gamepadPlugin.on('disconnected', (pad) => {
         if (this.pad?.id === pad.id) {
-          this.pad = gamepadPlugin.gamepads?.find((nextPad) => nextPad && nextPad.connected) ?? null;
-          this.updateHud();
+          this.pad = null;
         }
+        this.refreshConnectedPad(true);
       });
     }
 
@@ -104,6 +102,18 @@ export class GameScene extends Phaser.Scene {
     this.gamepadText = this.add
       .text(16, 132, '', { fontFamily: 'monospace', fontSize: '12px', color: '#9ec5ff' })
       .setScrollFactor(0);
+
+    this.gamepadDetailsText = this.add
+      .text(16, 148, '', { fontFamily: 'monospace', fontSize: '11px', color: '#7fb8ff' })
+      .setScrollFactor(0);
+
+    this.gamepadHintText = this.add
+      .text(16, 164, 'Click game to focus, then press any gamepad button', {
+        fontFamily: 'monospace',
+        fontSize: '11px',
+        color: '#c9d6ff'
+      })
+      .setScrollFactor(0);
   }
 
   getMoveX() {
@@ -117,10 +127,45 @@ export class GameScene extends Phaser.Scene {
     if (leftPressed && !rightPressed) return -1;
     if (rightPressed && !leftPressed) return 1;
 
-    const axis = this.pad.axes?.[this.gamepadButtons.stickX];
-    const axisX = axis?.getValue ? axis.getValue() : axis?.value ?? 0;
-    if (Math.abs(axisX) < this.gamepadDeadzone) return 0;
-    return axisX > 0 ? 1 : -1;
+    const dpadAxisMove = this.getDpadAxisMoveX();
+    if (dpadAxisMove !== 0) return dpadAxisMove;
+
+    const stickX = this.getAxisValue(this.gamepadButtons.stickX);
+    if (Math.abs(stickX) < this.gamepadDeadzone) return 0;
+    return stickX > 0 ? 1 : -1;
+  }
+
+  getAxisValue(index) {
+    if (!this.pad || !this.pad.connected) return 0;
+    const axis = this.pad.axes?.[index];
+    const value = axis?.getValue ? axis.getValue() : axis?.value ?? 0;
+    return Number.isFinite(value) ? value : 0;
+  }
+
+  getDpadAxisMoveX() {
+    // Some non-standard pads expose D-Pad as axis 6 (-1 left / +1 right).
+    const axis6 = this.getAxisValue(6);
+    if (Math.abs(axis6) >= this.gamepadDeadzone) {
+      return axis6 > 0 ? 1 : -1;
+    }
+
+    // POV hat fallback (often axis 9 on Windows/Chrome).
+    const axis9 = this.getAxisValue(9);
+    if (axis9 >= 0.25) return -1;
+    if (axis9 <= -0.25 && axis9 >= -0.85) return 1;
+    if (Math.abs(Math.abs(axis9) - 1) <= 0.12) return axis9 > 0 ? 1 : -1;
+    return 0;
+  }
+
+  refreshConnectedPad(forceHud = false) {
+    const gamepadPlugin = this.input.gamepad;
+    if (!gamepadPlugin) return;
+    const previousId = this.pad?.id ?? null;
+    this.pad = gamepadPlugin.gamepads?.find((pad) => pad && pad.connected) ?? null;
+    const nextId = this.pad?.id ?? null;
+    if (forceHud || previousId !== nextId) {
+      this.updateHud();
+    }
   }
 
   isJumpJustDown() {
@@ -236,9 +281,24 @@ export class GameScene extends Phaser.Scene {
     this.gamepadText.setText(
       `Gamepad: ${status} (B:${this.gamepadButtons.jump} Y:${this.gamepadButtons.shoot} D:${this.gamepadButtons.dpadLeft}/${this.gamepadButtons.dpadRight} AX:${this.gamepadButtons.stickX})`
     );
+    if (this.pad && this.pad.connected) {
+      const mapping = this.pad.mapping || 'unknown';
+      const buttonCount = this.pad.buttons?.length ?? 0;
+      const axisCount = this.pad.axes?.length ?? 0;
+      this.gamepadDetailsText.setText(`Pad: ${this.pad.id} | mapping: ${mapping} | buttons: ${buttonCount} | axes: ${axisCount}`);
+    } else {
+      this.gamepadDetailsText.setText('Pad: none | mapping: n/a | buttons: 0 | axes: 0');
+    }
   }
 
   update() {
+    if (!this.pad || !this.pad.connected) {
+      if (this.time.now - this.lastGamepadPollAt >= 1000) {
+        this.lastGamepadPollAt = this.time.now;
+        this.refreshConnectedPad(true);
+      }
+    }
+
     this.handleMovement();
     const shootPressed = Phaser.Input.Keyboard.JustDown(this.keys.shoot) || this.isShootJustDown();
     if (shootPressed) {
