@@ -1,5 +1,9 @@
 import Phaser from 'phaser';
 
+const LEFT_FRAME = 0;
+const RIGHT_FRAME = 1;
+const ENEMY_FRAMES_ARE_LEFT_RIGHT = false;
+
 export class Enemy extends Phaser.Physics.Arcade.Sprite {
   constructor(scene, x, y, minX, maxX) {
     super(scene, x, y, 'enemy1', 1);
@@ -17,7 +21,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.setOrigin(0.5, 1);
     this.setCollideWorldBounds(true);
     this.body.allowGravity = true;
-    this.setFrame(1);
+    this.setFacingFrame(this.direction);
     this.lastFacingFrame = 1;
   }
 
@@ -43,10 +47,18 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.setVelocityX(this.speed * this.direction);
     const nextFrame = this.direction < 0 ? 0 : 1;
     if (nextFrame !== this.lastFacingFrame) {
-      this.setFrame(nextFrame);
+      this.setFacingFrame(this.direction);
       this.alignBodyToFeet(18, 14);
-      this.scene?.alignSpriteFeetToBody?.(this, 0);
+      this.scene?.alignFeetToBody?.(this, 0);
       this.lastFacingFrame = nextFrame;
+    }
+  }
+
+  setFacingFrame(dir) {
+    if (ENEMY_FRAMES_ARE_LEFT_RIGHT) {
+      this.setFrame(dir < 0 ? LEFT_FRAME : RIGHT_FRAME);
+    } else {
+      this.setFrame(dir < 0 ? RIGHT_FRAME : LEFT_FRAME);
     }
   }
 

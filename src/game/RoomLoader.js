@@ -85,12 +85,12 @@ export class RoomLoader {
       const max = tileToPixel(spawnDef.patrolMaxTileX, spawnDef.tileY);
       const enemy = this.scene.createEnemy(start.x, start.y, min.x, max.x);
       const pScale = this.scene.player?.scaleX ?? 0.07;
-      const enemyScale = pScale * 0.85;
+      const enemyScale = pScale * 0.95;
       enemy.setScale(enemyScale);
       enemy.alignBodyToFeet?.(18, 14);
       this.scene.enemyGroup.add(enemy);
       this.scene.time.delayedCall(0, () => {
-        this.scene.alignSpriteFeetToBody?.(enemy, 0);
+        this.scene.alignFeetToBody?.(enemy, 0);
       });
     });
 
@@ -117,15 +117,13 @@ export class RoomLoader {
     });
 
     this.scene.refreshPlayerTileCollider?.();
-    this.scene.snapPlayerToGround?.();
     this.scene.time.delayedCall(0, () => {
-      this.scene.alignSpriteFeetToBody?.(this.scene.player, 0);
+      this.scene.alignFeetToBody?.(this.scene.player, 0);
     });
-    this.scene.enemyTileCollider = this.scene.physics.add.collider(this.scene.enemyGroup, this.scene.roomCollisionLayer);
-    this.scene.enemyGroup.children.iterate((enemy) => {
-      if (!enemy?.body) return;
-      this.scene.snapSpriteToGround?.(enemy, 192);
-      enemy.body.velocity.y = 0;
+    this.scene.enemyTileCollider = this.scene.physics.add.collider(this.scene.enemyGroup, this.scene.roomCollisionLayer, (enemy) => {
+      if (enemy?.body?.blocked?.down) {
+        this.scene.alignFeetToBody?.(enemy, 0);
+      }
     });
     this.scene.playerEnemyCollider = this.scene.physics.add.overlap(this.scene.player, this.scene.enemyGroup, (player, enemy) => {
       if (this.scene.onPlayerTouchEnemy) {

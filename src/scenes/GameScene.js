@@ -88,7 +88,7 @@ export class GameScene extends Phaser.Scene {
     this.roomLoader = new RoomLoader(this, getRoomById, this.gameState);
     this.roomLoader.loadRoom('room_01', 'start');
     this.time.delayedCall(0, () => {
-      this.alignSpriteFeetToBody(this.player, 0);
+      this.alignFeetToBody(this.player, 0);
     });
     this.updateCameraZoomToFit();
     this.cameras.main.centerOn(this.player.x, this.player.y);
@@ -128,7 +128,11 @@ export class GameScene extends Phaser.Scene {
       this.playerTileCollider = null;
     }
     if (this.player && this.roomCollisionLayer) {
-      this.playerTileCollider = this.physics.add.collider(this.player, this.roomCollisionLayer);
+      this.playerTileCollider = this.physics.add.collider(this.player, this.roomCollisionLayer, () => {
+        if (this.player?.body?.blocked?.down) {
+          this.alignFeetToBody(this.player, 0);
+        }
+      });
     }
   }
 
@@ -157,40 +161,14 @@ export class GameScene extends Phaser.Scene {
     body.setOffset(offX, offY);
   }
 
-  alignSpriteFeetToBody(sprite, fudgeWorld = 0) {
+  alignFeetToBody(sprite, fudgeWorld = 0) {
     if (!sprite?.body) return;
     sprite.setOrigin(0.5, 1);
-    const bodyBottom = sprite.body.bottom;
-    const gap = bodyBottom - sprite.y;
-    if (Math.abs(gap) > 0.25) {
-      sprite.y += gap + fudgeWorld;
-    } else if (fudgeWorld !== 0) {
-      sprite.y += fudgeWorld;
+    const desiredY = sprite.body.bottom + fudgeWorld;
+    const dy = desiredY - sprite.y;
+    if (Math.abs(dy) > 0.5) {
+      sprite.y = desiredY;
     }
-  }
-
-  snapSpriteToGround(sprite, maxScanPx = 256) {
-    if (!this.roomCollisionLayer || !sprite?.body) return;
-    const body = sprite.body;
-    const x = body.center.x;
-    const startY = body.top - 64;
-    const step = 4;
-
-    for (let dy = 0; dy <= maxScanPx; dy += step) {
-      const y = startY + dy;
-      const tile = this.roomCollisionLayer.getTileAtWorldXY(x, y, true);
-      if (tile && tile.collides) {
-        const topY = tile.pixelY;
-        const delta = topY - body.bottom;
-        sprite.y += delta;
-        body.velocity.y = 0;
-        return;
-      }
-    }
-  }
-
-  snapPlayerToGround(maxScanPx = 256) {
-    this.snapSpriteToGround(this.player, maxScanPx);
   }
 
   createHud() {
