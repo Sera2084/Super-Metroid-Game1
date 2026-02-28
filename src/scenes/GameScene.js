@@ -7,6 +7,7 @@ import { getRegisteredRoomCount, getRoomById, MAX_SUPPORTED_ROOMS } from '../roo
 export class GameScene extends Phaser.Scene {
   constructor() {
     super('GameScene');
+    this.bulletsList = [];
     this.pad = null;
     this.gamepadPrevPressed = new Map();
     this.lastPressedButtonIndex = -1;
@@ -51,6 +52,7 @@ export class GameScene extends Phaser.Scene {
     this.bullets = this.physics.add.group({
       allowGravity: false
     });
+    this.bulletsList = [];
 
     this.createHud();
     this.installErrorReporting();
@@ -327,7 +329,6 @@ export class GameScene extends Phaser.Scene {
     if (this.lastShotAt && now < this.lastShotAt + 150) return;
     const facing = this.playerState.facing >= 0 ? 1 : -1;
     const spawn = this.getBulletSpawn(this.player, facing);
-    const dir = this.playerState.facing >= 0 ? 1 : -1;
     const bullet = this.physics.add.image(spawn.x, spawn.y, 'bullet');
     if (!bullet || !bullet.body) return;
     bullet.setActive(true).setVisible(true);
@@ -335,29 +336,23 @@ export class GameScene extends Phaser.Scene {
     const body = bullet.body;
     body.reset(spawn.x, spawn.y);
     body.allowGravity = false;
-    if (body.setAllowGravity) body.setAllowGravity(false);
-    if (body.setGravity) body.setGravity(0, 0);
     body.gravity.y = 0;
-    body.setAcceleration(0, 0);
     body.setDrag(0, 0);
-    body.setFriction(0, 0);
     body.setBounce(0, 0);
-    body.setImmovable(false);
-    body.setSize(6, 6, true);
-    bullet.isProjectile = true;
-    bullet.vx = dir * 520;
     body.velocity.y = 0;
-    body.velocity.x = bullet.vx;
+    bullet.setVelocity(facing * 520, 0);
+    bullet.isProjectile = true;
+    bullet.vx = facing * 520;
     bullet.setCollideWorldBounds(false);
+    bullet.spawnTime = this.time.now;
+    bullet.lifespan = 800;
     this.bullets.add(bullet);
+    this.bulletsList.push(bullet);
     this.lastShotAt = now;
     this.pewText.setText('PEW!');
-    this.shotsText.setText(`Shots: ${this.bullets.countActive(true)}`);
+    this.shotsText.setText(`Shots: ${this.bulletsList.filter((b) => b?.active).length}`);
     this.time.delayedCall(200, () => {
       if (this.pewText?.active) this.pewText.setText('');
-    });
-    this.time.delayedCall(800, () => {
-      if (bullet && bullet.active) bullet.destroy();
     });
   }
 
@@ -473,24 +468,22 @@ export class GameScene extends Phaser.Scene {
       if (shootPressed) {
         this.tryShoot();
       }
-      this.bullets.children.iterate((b) => {
-        if (!b?.active || !b.body || !b.isProjectile) return;
-        b.body.allowGravity = false;
-        b.body.gravity.y = 0;
-        b.body.velocity.y = 0;
-        if (typeof b.vx === 'number' && Math.abs(b.body.velocity.x) < 1) {
-          b.body.velocity.x = b.vx;
+      const leftBound = this.cameras.main.worldView.left - 50;
+      const rightBound = this.cameras.main.worldView.right + 50;
+      this.bulletsList = this.bulletsList.filter((b) => {
+        if (!b || !b.active || !b.body) return false;
+        b.lifespan -= delta;
+        if (b.lifespan <= 0 || b.x < leftBound || b.x > rightBound) {
+          b.destroy();
+          return false;
         }
+        return true;
       });
-      this.shotsText.setText(`Shots: ${this.bullets.countActive(true)}`);
-      let firstActiveBullet = null;
-      this.bullets.children.iterate((bullet) => {
-        if (firstActiveBullet || !bullet?.active) return;
-        firstActiveBullet = bullet;
-      });
-      if (firstActiveBullet?.body) {
+      this.shotsText.setText(`Shots: ${this.bulletsList.length}`);
+      const lastBullet = this.bulletsList[this.bulletsList.length - 1];
+      if (lastBullet?.body) {
         this.lastErrorText?.setText(
-          `BulletVX: ${Math.round(firstActiveBullet.body.velocity.x)} VY:${Math.round(firstActiveBullet.body.velocity.y)}`
+          `Bullet vx:${Math.round(lastBullet.body.velocity.x)} vy:${Math.round(lastBullet.body.velocity.y)}`
         );
       }
       this.updateGamepadLiveHud();
