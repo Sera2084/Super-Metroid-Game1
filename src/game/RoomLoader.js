@@ -111,6 +111,7 @@ export class RoomLoader {
     });
 
     this.scene.refreshPlayerTileCollider?.();
+    this.scene.snapPlayerToGround?.();
     this.scene.enemyTileCollider = this.scene.physics.add.collider(this.scene.enemyGroup, this.scene.roomCollisionLayer);
     this.scene.playerEnemyCollider = this.scene.physics.add.overlap(this.scene.player, this.scene.enemyGroup, () => {
       this.scene.damagePlayer(1);

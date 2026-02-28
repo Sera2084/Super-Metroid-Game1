@@ -48,8 +48,14 @@ export class GameScene extends Phaser.Scene {
     this.player = this.physics.add.sprite(64, 64, 'player', 1);
     this.player.setOrigin(0.5, 1);
     this.player.setScale(0.07);
-    this.player.body.setSize(24, 40, false);
-    this.player.body.setOffset((this.player.width - 24) / 2, this.player.height - 40);
+    const BODY_W = 26;
+    const BODY_H = 44;
+    this.player.body.setSize(BODY_W, BODY_H, false);
+    const texW = this.player.width;
+    const texH = this.player.height;
+    const offX = Math.round((texW - BODY_W) / 2);
+    const offY = Math.round(texH - BODY_H);
+    this.player.body.setOffset(offX, offY);
     this.player.setFrame(0);
     this.player.setFlipX(false);
     this.player.setCollideWorldBounds(true);
@@ -126,6 +132,26 @@ export class GameScene extends Phaser.Scene {
     }
     if (this.player && this.roomCollisionLayer) {
       this.playerTileCollider = this.physics.add.collider(this.player, this.roomCollisionLayer);
+    }
+  }
+
+  snapPlayerToGround(maxScanPx = 256) {
+    if (!this.roomCollisionLayer || !this.player?.body) return;
+    const body = this.player.body;
+    const x = body.center.x;
+    const startY = body.top - 64;
+    const step = 4;
+
+    for (let dy = 0; dy <= maxScanPx; dy += step) {
+      const y = startY + dy;
+      const tile = this.roomCollisionLayer.getTileAtWorldXY(x, y, true);
+      if (tile && tile.collides) {
+        const topY = tile.pixelY;
+        const delta = topY - body.bottom;
+        this.player.y += delta;
+        body.velocity.y = 0;
+        return;
+      }
     }
   }
 
@@ -380,18 +406,8 @@ export class GameScene extends Phaser.Scene {
   getBulletSpawn(player, facing) {
     const body = player?.body;
     const dir = facing >= 0 ? 1 : -1;
-    const pad = 8;
-    let spawnX = player.x + dir * ((body?.halfWidth ?? 8) + pad);
-    const spawnY = player.y - ((body?.halfHeight ?? 12) * 0.55);
-
-    if (this.roomCollisionLayer?.getTileAtWorldXY) {
-      for (let i = 0; i < 2; i += 1) {
-        const tile = this.roomCollisionLayer.getTileAtWorldXY(spawnX, spawnY, true);
-        if (!tile?.collides) break;
-        spawnX += dir * 16;
-      }
-    }
-
+    const spawnX = (body?.center?.x ?? player.x) + dir * ((body?.halfWidth ?? 8) + 10);
+    const spawnY = (body?.center?.y ?? player.y) - Math.round((body?.halfHeight ?? 12) * 0.25);
     return { x: spawnX, y: spawnY };
   }
 
