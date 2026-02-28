@@ -51,8 +51,7 @@ export class GameScene extends Phaser.Scene {
     this.bullets = this.physics.add.group({
       classType: Phaser.Physics.Arcade.Image,
       runChildUpdate: false,
-      allowGravity: false,
-      immovable: true
+      allowGravity: false
     });
 
     this.createHud();
@@ -341,7 +340,6 @@ export class GameScene extends Phaser.Scene {
       bullet.body.setAllowGravity(false);
       bullet.body.setGravity(0, 0);
       bullet.body.setVelocityY(0);
-      bullet.body.setImmovable(true);
       bullet.body.setSize(6, 6, true);
     }
     bullet.setAllowGravity(false);
@@ -488,6 +486,16 @@ export class GameScene extends Phaser.Scene {
         }
       });
       this.shotsText.setText(`Shots: ${this.bullets.countActive(true)}`);
+      let firstActiveBullet = null;
+      this.bullets.children.iterate((bullet) => {
+        if (firstActiveBullet || !bullet?.active) return;
+        firstActiveBullet = bullet;
+      });
+      if (firstActiveBullet?.body) {
+        this.lastErrorText?.setText(
+          `BulletVX: ${Math.round(firstActiveBullet.body.velocity.x)} VY:${Math.round(firstActiveBullet.body.velocity.y)}`
+        );
+      }
       this.updateGamepadLiveHud();
       if (this.player.y > this.physics.world.bounds.height + 60) {
         this.damagePlayer(99);
