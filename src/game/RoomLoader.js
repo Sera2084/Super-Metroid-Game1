@@ -110,6 +110,10 @@ export class RoomLoader {
         enemy.hurt();
       }
     );
+    if (this.scene.bulletTileCollider) {
+      this.scene.bulletTileCollider.destroy();
+      this.scene.bulletTileCollider = null;
+    }
     this.scene.bulletTileCollider = this.scene.physics.add.overlap(
       this.scene.bullets,
       this.scene.roomCollisionLayer,
