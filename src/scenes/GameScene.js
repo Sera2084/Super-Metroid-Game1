@@ -61,6 +61,14 @@ export class GameScene extends Phaser.Scene {
     const offX = Math.round((PLAYER_FRAME_W - bodyW) / 2);
     const offY = Math.round(PLAYER_FRAME_H - bodyH + tweakY);
     this.player.body.setOffset(offX, offY);
+    // Auto-calibrate once: align physics feet to sprite feet (originY=1).
+    const body = this.player.body;
+    const gapWorld = body.bottom - this.player.y;
+    if (Math.abs(gapWorld) > 1) {
+      const adjustTex = Math.round(gapWorld / scale);
+      const curOff = body.offset.y;
+      body.setOffset(body.offset.x, curOff - adjustTex);
+    }
     this.player.setFrame(0);
     this.player.setFlipX(false);
     this.player.setCollideWorldBounds(true);
