@@ -29,6 +29,11 @@ export class RoomLoader {
   }
 
   loadRoom(roomId, spawnId = 'start') {
+    if (this.scene.bulletTileCollider) {
+      this.scene.bulletTileCollider.destroy();
+      this.scene.bulletTileCollider = null;
+    }
+
     const room = this.roomProvider(roomId);
     if (!room) {
       throw new Error(`Raum nicht gefunden: ${roomId}`);
