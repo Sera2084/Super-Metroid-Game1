@@ -49,7 +49,7 @@ export class GameScene extends Phaser.Scene {
     this.player.body.setOffset(2, 2);
     this.player.setCollideWorldBounds(true);
 
-    this.bullets = this.physics.add.group({
+    this.bulletsGroup = this.physics.add.group({
       allowGravity: false
     });
     this.bulletsList = [];
@@ -350,7 +350,8 @@ export class GameScene extends Phaser.Scene {
     bullet.isProjectile = true;
     bullet.setCollideWorldBounds(false);
     bullet.spawnTime = this.time.now;
-    bullet.lifespan = 800;
+    bullet.lifespan = 450;
+    this.bulletsGroup.add(bullet);
     this.bulletsList.push(bullet);
     this.lastErrorText?.setText(`Shoot dir:${dir} vx:${Math.round(body.velocity.x)} vy:${Math.round(body.velocity.y)}`);
     this.lastShotAt = now;

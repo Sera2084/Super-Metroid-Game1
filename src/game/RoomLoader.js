@@ -108,7 +108,7 @@ export class RoomLoader {
       this.scene.damagePlayer(1);
     });
     this.scene.bulletEnemyOverlap = this.scene.physics.add.overlap(
-      this.scene.bullets,
+      this.scene.bulletsGroup,
       this.scene.enemyGroup,
       (bullet, enemy) => {
         if (bullet?.active) bullet.destroy();
@@ -119,8 +119,20 @@ export class RoomLoader {
       this.scene.bulletTileCollider.destroy();
       this.scene.bulletTileCollider = null;
     }
-    // Emergency debug mode: disable bullet vs tile collision to prevent instant despawn.
-    this.scene.bulletTileCollider = null;
+    this.scene.bulletTileCollider = this.scene.physics.add.overlap(
+      this.scene.bulletsGroup,
+      this.scene.roomCollisionLayer,
+      (bullet) => {
+        this.scene.lastErrorText?.setText(`BulletHitTile @ ${Math.round(bullet.x)},${Math.round(bullet.y)}`);
+        if (bullet?.active) bullet.destroy();
+      },
+      (bullet) => {
+        const now = this.scene.time.now;
+        const spawnTime = bullet.spawnTime ?? 0;
+        return now - spawnTime > 80;
+      },
+      this
+    );
 
     this.scene.playerDoorOverlap = this.scene.physics.add.overlap(this.scene.player, this.scene.doorZones, (_, zone) => {
       const door = zone.getData('door');
