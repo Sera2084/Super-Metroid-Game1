@@ -60,8 +60,7 @@ export class RoomLoader {
       throw new Error('Tileset "tiles_biolab" konnte nicht erstellt werden.');
     }
     const collisionLayer = tilemap.createLayer(0, biolabTileset, 0, 0);
-    collisionLayer.setCollisionByProperty({ collides: true });
-    collisionLayer.setCollisionByExclusion([-1], true);
+    collisionLayer.setCollisionByExclusion([-1]);
 
     this.scene.roomTilemap = tilemap;
     this.scene.roomCollisionLayer = collisionLayer;
@@ -71,8 +70,7 @@ export class RoomLoader {
 
     const spawn = room.spawnPoints[spawnId] ?? room.spawnPoints.start;
     const spawnPx = tileToPixel(spawn.tileX, spawn.tileY);
-    this.scene.player.setPosition(spawnPx.x, spawnPx.y);
-    this.scene.snapPlayerToGround?.();
+    this.scene.player.setPosition(spawnPx.x, spawnPx.y - 32);
 
     room.enemySpawns.forEach((spawnDef) => {
       const start = tileToPixel(spawnDef.tileX, spawnDef.tileY);
@@ -104,7 +102,7 @@ export class RoomLoader {
       sprite.setData('item', item);
     });
 
-    this.scene.playerTileCollider = this.scene.physics.add.collider(this.scene.player, this.scene.roomCollisionLayer);
+    this.scene.refreshPlayerTileCollider?.();
     this.scene.enemyTileCollider = this.scene.physics.add.collider(this.scene.enemyGroup, this.scene.roomCollisionLayer);
     this.scene.playerEnemyCollider = this.scene.physics.add.overlap(this.scene.player, this.scene.enemyGroup, () => {
       this.scene.damagePlayer(1);
