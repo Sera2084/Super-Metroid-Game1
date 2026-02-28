@@ -340,12 +340,6 @@ export class GameScene extends Phaser.Scene {
     bullet.body.setGravity(0, 0);
     bullet.body.setImmovable(true);
     bullet.body.setSize(6, 6, true);
-    if (bullet.body?.checkCollision) {
-      bullet.body.checkCollision.none = true;
-      this.time.delayedCall(0, () => {
-        if (bullet.active && bullet.body?.checkCollision) bullet.body.checkCollision.none = false;
-      });
-    }
     bullet.setAllowGravity(false);
     bullet.setDrag(0, 0);
     bullet.setFriction(0, 0);
@@ -359,6 +353,7 @@ export class GameScene extends Phaser.Scene {
       bullet.body.checkCollision.down = false;
     }
     bullet.setCollideWorldBounds(false);
+    bullet.spawnTime = this.time.now;
     bullet.lifespan = 800;
     this.lastShotAt = now;
     this.pewText.setText('PEW!');
@@ -482,7 +477,8 @@ export class GameScene extends Phaser.Scene {
       }
       this.bullets.children.iterate((bullet) => {
         if (!bullet?.active) return;
-        bullet.lifespan = (bullet.lifespan ?? 0) - delta;
+        if (typeof bullet.lifespan !== 'number') return;
+        bullet.lifespan -= delta;
         if (bullet.lifespan <= 0) {
           bullet.disableBody(true, true);
         }

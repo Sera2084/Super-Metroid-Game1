@@ -116,6 +116,11 @@ export class RoomLoader {
       (bullet) => {
         this.scene.lastErrorText?.setText(`BulletHitTile @ ${Math.round(bullet.x)},${Math.round(bullet.y)}`);
         bullet.disableBody(true, true);
+      },
+      (bullet) => {
+        const now = this.scene.time.now;
+        const spawnTime = bullet.spawnTime ?? 0;
+        return now - spawnTime > 80;
       }
     );
 
