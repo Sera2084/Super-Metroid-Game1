@@ -32,7 +32,6 @@ export class GameScene extends Phaser.Scene {
 
   create() {
     this.gameState = new GameState();
-    console.log("WORLD GRAVITY:", this.physics.world.gravity.y);
 
     this.cursors = this.input.keyboard.createCursorKeys();
     this.keys = this.input.keyboard.addKeys({
@@ -343,10 +342,12 @@ export class GameScene extends Phaser.Scene {
     bullet.body.setImmovable(false);
     bullet.body.setSize(6, 6, true);
     bullet.body.reset(spawn.x, spawn.y);
-    bullet.setVelocity(dir * 520, 0);
-    bullet.body.setMaxVelocity(520, 0);
-    bullet.body.velocity.y = 0;
     bullet.isProjectile = true;
+    bullet.vx = dir * 520;
+    bullet.body.allowGravity = false;
+    bullet.body.setAllowGravity(false);
+    bullet.body.setGravity(0, 0);
+    bullet.body.setVelocity(bullet.vx, 0);
     bullet.setCollideWorldBounds(false);
     this.bullets.add(bullet);
     this.lastShotAt = now;
@@ -472,6 +473,15 @@ export class GameScene extends Phaser.Scene {
       if (shootPressed) {
         this.tryShoot();
       }
+      this.bullets.children.iterate((b) => {
+        if (!b?.active || !b.body || !b.isProjectile) return;
+        b.body.allowGravity = false;
+        b.body.gravity.y = 0;
+        b.body.velocity.y = 0;
+        if (typeof b.vx === 'number' && Math.abs(b.body.velocity.x) < 1) {
+          b.body.velocity.x = b.vx;
+        }
+      });
       this.shotsText.setText(`Shots: ${this.bullets.countActive(true)}`);
       let firstActiveBullet = null;
       this.bullets.children.iterate((bullet) => {
