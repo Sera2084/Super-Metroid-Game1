@@ -106,7 +106,7 @@ export class RoomLoader {
       this.scene.bullets,
       this.scene.enemyGroup,
       (bullet, enemy) => {
-        bullet.disableBody(true, true);
+        if (bullet?.active) bullet.destroy();
         enemy.hurt();
       }
     );
@@ -115,12 +115,7 @@ export class RoomLoader {
       this.scene.roomCollisionLayer,
       (bullet) => {
         this.scene.lastErrorText?.setText(`BulletDisable: tile @ ${Math.round(bullet.x)},${Math.round(bullet.y)}`);
-        bullet.disableBody(true, true);
-      },
-      (bullet) => {
-        const now = this.scene.time.now;
-        const spawnTime = typeof bullet.spawnTime === 'number' ? bullet.spawnTime : now;
-        return now - spawnTime > 120;
+        if (bullet?.active) bullet.destroy();
       }
     );
 
