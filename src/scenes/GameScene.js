@@ -106,6 +106,8 @@ export class GameScene extends Phaser.Scene {
       this.scale.off('resize', this.updateCameraZoomToFit, this);
       this.gamepadPollEvent?.remove(false);
       this.input.keyboard?.off('keydown-F2', this.onF2ToggleDebug);
+      this._tileDebugGraphic?.destroy();
+      this._tileDebugGraphic = null;
       if (typeof window !== 'undefined') {
         if (this.onWindowError) window.removeEventListener('error', this.onWindowError);
         if (this.onUnhandledRejection) window.removeEventListener('unhandledrejection', this.onUnhandledRejection);
@@ -124,6 +126,18 @@ export class GameScene extends Phaser.Scene {
     if (world.debugGraphic) {
       world.debugGraphic.clear();
       world.debugGraphic.visible = this._debugPhysics;
+    }
+    if (!this._tileDebugGraphic) {
+      this._tileDebugGraphic = this.add.graphics().setDepth(9999);
+      this._tileDebugGraphic.setScrollFactor(1);
+    }
+    this._tileDebugGraphic.clear();
+    this._tileDebugGraphic.setVisible(this._debugPhysics);
+    if (this._debugPhysics && this.roomCollisionLayer?.renderDebug) {
+      this.roomCollisionLayer.renderDebug(this._tileDebugGraphic, {
+        collidingTileColor: new Phaser.Display.Color(255, 80, 80, 180),
+        faceColor: new Phaser.Display.Color(80, 255, 80, 180)
+      });
     }
   }
 

@@ -11,6 +11,7 @@ const config = {
     arcade: {
       gravity: { y: 800 },
       debug: false,
+      tileBias: 32,
       roundPixels: true
     }
   },
