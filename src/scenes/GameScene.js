@@ -327,8 +327,8 @@ export class GameScene extends Phaser.Scene {
   tryShoot() {
     const now = this.time.now;
     if (this.lastShotAt && now < this.lastShotAt + 150) return;
-    const facing = this.playerState.facing >= 0 ? 1 : -1;
-    const spawn = this.getBulletSpawn(this.player, facing);
+    const dir = this.playerState?.facing < 0 ? -1 : 1;
+    const spawn = this.getBulletSpawn(this.player, dir);
     const bullet = this.physics.add.image(spawn.x, spawn.y, 'bullet');
     if (!bullet || !bullet.body) return;
     bullet.setActive(true).setVisible(true);
@@ -341,15 +341,18 @@ export class GameScene extends Phaser.Scene {
     body.gravity.y = 0;
     body.setDrag(0, 0);
     body.setBounce(0, 0);
-    body.velocity.x = facing * 520;
+    const speed = 520;
+    bullet.vx = dir * speed;
+    body.velocity.x = bullet.vx;
     body.velocity.y = 0;
-    bullet.setVelocity(facing * 520, 0);
+    if (body.setVelocity) body.setVelocity(bullet.vx, 0);
+    if (bullet.setVelocity) bullet.setVelocity(bullet.vx, 0);
     bullet.isProjectile = true;
-    bullet.vx = facing * 520;
     bullet.setCollideWorldBounds(false);
     bullet.spawnTime = this.time.now;
     bullet.lifespan = 800;
     this.bulletsList.push(bullet);
+    this.lastErrorText?.setText(`Shoot dir:${dir} vx:${Math.round(body.velocity.x)} vy:${Math.round(body.velocity.y)}`);
     this.lastShotAt = now;
     this.pewText.setText('PEW!');
     this.shotsText.setText(`Shots: ${this.bulletsList.filter((b) => b?.active).length}`);
@@ -479,6 +482,7 @@ export class GameScene extends Phaser.Scene {
         }
         b.body.velocity.y = 0;
         b.body.allowGravity = false;
+        b.body.gravity.y = 0;
         b.lifespan -= delta;
         if (b.lifespan <= 0 || b.x < leftBound || b.x > rightBound) {
           b.destroy();
