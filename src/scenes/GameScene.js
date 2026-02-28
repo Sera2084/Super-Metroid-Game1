@@ -163,13 +163,21 @@ export class GameScene extends Phaser.Scene {
   setWorldHitbox(sprite, targetWWorld, targetHWorld) {
     if (!sprite?.body) return;
     sprite.setOrigin(0.5, 1);
+    const scaleX = Math.abs(sprite.scaleX || 1);
+    const scaleY = Math.abs(sprite.scaleY || 1);
+    if (scaleX <= 0 || scaleY <= 0) return;
     const body = sprite.body;
-    body.setSize(targetWWorld, targetHWorld, false);
-    const dw = sprite.displayWidth;
-    const dh = sprite.displayHeight;
-    const offX = Math.round((dw - targetWWorld) / 2);
-    const offY = Math.round(dh - targetHWorld);
+    const targetW = Math.max(1, Math.round(targetWWorld / scaleX));
+    const targetH = Math.max(1, Math.round(targetHWorld / scaleY));
+    body.setSize(targetW, targetH, false);
+    const frameW = sprite.width;
+    const frameH = sprite.height;
+    const offX = Math.round((frameW - targetW) / 2);
+    const offY = Math.round(frameH - targetH);
     body.setOffset(offX, offY);
+    if (typeof body.updateFromGameObject === 'function') {
+      body.updateFromGameObject();
+    }
   }
 
   createHud() {
