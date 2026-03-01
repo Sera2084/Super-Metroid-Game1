@@ -76,9 +76,9 @@ export class RoomLoader {
     const worldH = room.height * TILE_SIZE;
     const BOTTOM_PADDING = 128;
     this.scene.physics.world.setBounds(0, 0, worldW, worldH + BOTTOM_PADDING);
-    this.scene.cameras.main.setBounds(0, 0, worldW, worldH);
+    this.scene.cameras.main.setBounds(0, 0, worldW, worldH + BOTTOM_PADDING);
     this.scene._roomWorldW = worldW;
-    this.scene._roomWorldH = worldH;
+    this.scene._roomWorldH = worldH + BOTTOM_PADDING;
 
     const spawn = room.spawnPoints[spawnId] ?? room.spawnPoints.start;
     const spawnPx = {
