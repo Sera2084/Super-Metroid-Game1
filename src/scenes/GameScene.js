@@ -104,6 +104,8 @@ export class GameScene extends Phaser.Scene {
       this.input.keyboard?.off('keydown-F2', this.onF2ToggleDebug);
       this._tileDebugGraphic?.destroy();
       this._tileDebugGraphic = null;
+      this._spriteDebugGraphic?.destroy();
+      this._spriteDebugGraphic = null;
       if (typeof window !== 'undefined') {
         if (this.onWindowError) window.removeEventListener('error', this.onWindowError);
         if (this.onUnhandledRejection) window.removeEventListener('unhandledrejection', this.onUnhandledRejection);
@@ -127,14 +129,68 @@ export class GameScene extends Phaser.Scene {
       this._tileDebugGraphic = this.add.graphics().setDepth(9999);
       this._tileDebugGraphic.setScrollFactor(1);
     }
+    if (!this._spriteDebugGraphic) {
+      this._spriteDebugGraphic = this.add.graphics().setDepth(10000);
+      this._spriteDebugGraphic.setScrollFactor(1);
+    }
     this._tileDebugGraphic.clear();
     this._tileDebugGraphic.setVisible(this._debugPhysics);
+    this._spriteDebugGraphic.clear();
+    this._spriteDebugGraphic.setVisible(this._debugPhysics);
     if (this._debugPhysics && this.roomCollisionLayer?.renderDebug) {
       this.roomCollisionLayer.renderDebug(this._tileDebugGraphic, {
         collidingTileColor: new Phaser.Display.Color(255, 80, 80, 180),
         faceColor: new Phaser.Display.Color(80, 255, 80, 180)
       });
     }
+  }
+
+  drawSpriteDebugBounds() {
+    if (!this._debugPhysics || !this._spriteDebugGraphic) return;
+    const g = this._spriteDebugGraphic;
+    g.clear();
+    const drawSpriteBounds = (sprite, color = 0x00ffff) => {
+      if (!sprite?.active) return;
+      const b = sprite.getBounds();
+      g.lineStyle(1, color, 1);
+      g.strokeRect(Math.round(b.x), Math.round(b.y), Math.round(b.width), Math.round(b.height));
+      if (sprite.body) {
+        g.lineStyle(1, 0xffff00, 1);
+        g.strokeRect(
+          Math.round(sprite.body.x),
+          Math.round(sprite.body.y),
+          Math.round(sprite.body.width),
+          Math.round(sprite.body.height)
+        );
+      }
+    };
+    drawSpriteBounds(this.player, 0x00ffff);
+    this.enemyGroup?.children?.iterate?.((enemy) => {
+      drawSpriteBounds(enemy, 0xff66ff);
+    });
+  }
+
+  debugGroundAlignment() {
+    if (!this._debugPhysics || !this.roomCollisionLayer) return;
+    const now = this.time.now;
+    if (now - (this._lastGroundDebugAt ?? 0) < 200) return;
+    this._lastGroundDebugAt = now;
+    const debugOne = (label, sprite) => {
+      if (!sprite?.active || !sprite.body) return;
+      const bounds = sprite.getBounds();
+      const spriteBottom = bounds.bottom;
+      const bodyBottom = sprite.body.bottom;
+      const tile = this.roomCollisionLayer.getTileAtWorldXY(sprite.body.center.x, bodyBottom + 1, true);
+      const tileTop = tile?.pixelY ?? null;
+      const tileDelta = tileTop == null ? 'n/a' : (tileTop - bodyBottom).toFixed(2);
+      // eslint-disable-next-line no-console
+      console.log(
+        `[${label}] x=${sprite.x.toFixed(2)} y=${sprite.y.toFixed(2)} body=(${sprite.body.x.toFixed(2)},${sprite.body.y.toFixed(2)}) bodyBottom=${bodyBottom.toFixed(2)} spriteBottom=${spriteBottom.toFixed(2)} deltaSB=${(spriteBottom - bodyBottom).toFixed(2)} tileTop=${tileTop} tileDelta=${tileDelta}`
+      );
+    };
+    debugOne('PLAYER', this.player);
+    const firstEnemy = this.enemyGroup?.getChildren?.()?.find((e) => e?.active);
+    if (firstEnemy) debugOne('ENEMY', firstEnemy);
   }
 
   updateCameraZoomToFit() {
@@ -521,6 +577,8 @@ export class GameScene extends Phaser.Scene {
       this.handleMovement();
       this.cameras.main.scrollX = Math.round(this.cameras.main.scrollX);
       this.cameras.main.scrollY = Math.round(this.cameras.main.scrollY);
+      this.drawSpriteDebugBounds();
+      this.debugGroundAlignment();
       this.captureLastPressedButton();
       const shootPressed = Phaser.Input.Keyboard.JustDown(this.keys.shoot) || this.isShootJustDown();
       if (shootPressed) {
