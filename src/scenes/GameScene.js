@@ -35,6 +35,9 @@ export class GameScene extends Phaser.Scene {
     this._debugJitter = false;
     this._jitterHudAt = 0;
     this._jitterLast = null;
+    this.playerHitboxStandW = 26;
+    this.playerHitboxStandH = 44;
+    this.playerHitboxCrouchH = 30;
   }
 
   create() {
@@ -55,7 +58,7 @@ export class GameScene extends Phaser.Scene {
     this.player = this.physics.add.sprite(64, 64, 'player_v2', 1);
     this.player.setOrigin(0.5, 1);
     this.player.setScale(0.07);
-    this.setWorldHitbox(this.player, 26, 44);
+    this.setWorldHitbox(this.player, this.playerHitboxStandW, this.playerHitboxStandH);
     this.player.setFrame(0);
     this.player.setFlipX(false);
     this.player.setCollideWorldBounds(true);
@@ -571,6 +574,25 @@ export class GameScene extends Phaser.Scene {
     this.playerState.canDash = this.gameState.data.upgrades.dash;
   }
 
+  enterCrouch() {
+    if (this.playerState.isCrouching) return;
+    this.playerState.isCrouching = true;
+    this.player.setTexture('player_kneel', 0);
+    this.player.setFrame(0);
+    this.player.setFlipX(this.playerState.facing < 0);
+    this.setWorldHitbox(this.player, this.playerHitboxStandW, this.playerHitboxCrouchH);
+    this.player.setVelocityX(0);
+  }
+
+  exitCrouch() {
+    if (!this.playerState.isCrouching) return;
+    this.playerState.isCrouching = false;
+    this.player.setTexture('player_v2', 0);
+    this.player.setFrame(0);
+    this.player.setFlipX(this.playerState.facing < 0);
+    this.setWorldHitbox(this.player, this.playerHitboxStandW, this.playerHitboxStandH);
+  }
+
   tryShoot() {
     const now = this.time.now;
     if (this.lastShotAt && now < this.lastShotAt + 150) return;
@@ -616,7 +638,7 @@ export class GameScene extends Phaser.Scene {
     if (!body) {
       return { x: player.x + dir * 12, y: player.y - 10 };
     }
-    const BULLET_Y_FRACTION = 0.55;
+    const BULLET_Y_FRACTION = this.playerState?.isCrouching ? 0.45 : 0.55;
     const pad = 6;
     const spawnX = dir > 0 ? body.right + pad : body.left - pad;
     const spawnY = body.top + body.height * BULLET_Y_FRACTION;
@@ -796,3 +818,4 @@ export class GameScene extends Phaser.Scene {
     }
   }
 }
+
