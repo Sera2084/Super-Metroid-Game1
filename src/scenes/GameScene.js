@@ -26,6 +26,7 @@ export class GameScene extends Phaser.Scene {
       dashCooldownUntil: 0,
       facing: 1
     };
+    this._jumpJustPressed = false;
   }
 
   create() {
@@ -215,6 +216,25 @@ export class GameScene extends Phaser.Scene {
     if (this.player && this.roomCollisionLayer) {
       this.playerTileCollider = this.physics.add.collider(this.player, this.roomCollisionLayer);
     }
+  }
+
+  snapPlayerToGroundIfNeeded() {
+    const body = this.player?.body;
+    if (!body || !this.roomCollisionLayer) return;
+    if (!body.blocked.down) return;
+    if (this._jumpJustPressed) return;
+    if (body.velocity.y < -1) return;
+
+    const tile = this.roomCollisionLayer.getTileAtWorldXY(body.center.x, body.bottom + 1, true);
+    if (!tile || !tile.collides) return;
+
+    const tileTop = tile.pixelY;
+    const delta = tileTop - body.bottom;
+    if (Math.abs(delta) < 0.1 || Math.abs(delta) > 1.5) return;
+
+    this.player.y += delta;
+    body.position.y += delta;
+    body.velocity.y = 0;
   }
 
   setWorldHitbox(sprite, targetWWorld, targetHWorld) {
@@ -530,6 +550,7 @@ export class GameScene extends Phaser.Scene {
       Phaser.Input.Keyboard.JustDown(this.keys.jump) ||
       Phaser.Input.Keyboard.JustDown(this.cursors.space) ||
       this.isJumpJustDown();
+    this._jumpJustPressed = jumpPressed;
     if (jumpPressed && body.blocked.down) {
       this.player.setVelocityY(-340);
     }
@@ -544,6 +565,9 @@ export class GameScene extends Phaser.Scene {
 
     if (this.time.now > this.playerState.dashUntil) {
       body.allowGravity = true;
+    }
+    if (moveX === 0 && body.blocked.down) {
+      body.velocity.x = 0;
     }
 
   }
@@ -577,6 +601,7 @@ export class GameScene extends Phaser.Scene {
   update(_time, delta) {
     try {
       this.handleMovement();
+      this.snapPlayerToGroundIfNeeded();
       this.cameras.main.scrollX = Math.round(this.cameras.main.scrollX);
       this.cameras.main.scrollY = Math.round(this.cameras.main.scrollY);
       this.drawSpriteDebugBounds();
