@@ -28,6 +28,7 @@ export class GameScene extends Phaser.Scene {
     };
     this._jumpJustPressed = false;
     this._groundedFrames = 0;
+    this._disableGroundSnap = false;
   }
 
   create() {
@@ -89,14 +90,18 @@ export class GameScene extends Phaser.Scene {
     this.roomLoader.loadRoom('room_01', 'start');
     this.updateCameraZoomToFit();
     this.cameras.main.centerOn(this.player.x, this.player.y);
-    this.cameras.main.startFollow(this.player, true, 0, 0);
+    this.cameras.main.startFollow(this.player, true, 1, 1);
     this.cameras.main.roundPixels = true;
     this.cameras.main.setRoundPixels(true);
     this.scale.on('resize', this.updateCameraZoomToFit, this);
     this.onF2ToggleDebug = () => {
       this.setPhysicsDebugEnabled(!this._debugPhysics);
     };
+    this.onF3ToggleSnapDebug = () => {
+      this._disableGroundSnap = !this._disableGroundSnap;
+    };
     this.input.keyboard?.on('keydown-F2', this.onF2ToggleDebug);
+    this.input.keyboard?.on('keydown-F3', this.onF3ToggleSnapDebug);
 
     this.applyGameStateToPlayer();
     this.updateHud();
@@ -104,6 +109,7 @@ export class GameScene extends Phaser.Scene {
       this.scale.off('resize', this.updateCameraZoomToFit, this);
       this.gamepadPollEvent?.remove(false);
       this.input.keyboard?.off('keydown-F2', this.onF2ToggleDebug);
+      this.input.keyboard?.off('keydown-F3', this.onF3ToggleSnapDebug);
       this._tileDebugGraphic?.destroy();
       this._tileDebugGraphic = null;
       this._spriteDebugGraphic?.destroy();
@@ -178,13 +184,13 @@ export class GameScene extends Phaser.Scene {
     if (now - (this._lastGroundDebugAt ?? 0) < 200) return;
     this._lastGroundDebugAt = now;
     const camera = this.cameras.main;
-    const camBounds = camera?.getBounds?.();
-    const maxScrollY =
-      camBounds && camera?.worldView ? camBounds.y + camBounds.height - camera.worldView.height : Number.NaN;
+    const camBounds = camera?.getBounds?.() ?? camera?._bounds ?? null;
+    const maxScrollY = camBounds ? camBounds.y + camBounds.height - camera.worldView.height : Number.NaN;
     const isAtBottom = Number.isFinite(maxScrollY) ? Math.abs(camera.scrollY - maxScrollY) < 0.51 : false;
+    const scrollRoundDelta = Math.round(camera.scrollY) - camera.scrollY;
     // eslint-disable-next-line no-console
     console.log(
-      `[CAMERA] scrollY=${camera.scrollY.toFixed(2)} worldViewY=${camera.worldView.y.toFixed(2)} maxScrollY=${Number.isFinite(maxScrollY) ? maxScrollY.toFixed(2) : 'n/a'} atBottom=${isAtBottom}`
+      `[CAMERA] scrollY=${camera.scrollY.toFixed(3)} roundDelta=${scrollRoundDelta.toFixed(3)} worldViewTop=${camera.worldView.y.toFixed(3)} worldViewBottom=${camera.worldView.bottom.toFixed(3)} maxScrollY=${Number.isFinite(maxScrollY) ? maxScrollY.toFixed(3) : 'n/a'} atBottom=${isAtBottom}`
     );
     const debugOne = (label, sprite) => {
       if (!sprite?.active || !sprite.body) return;
@@ -230,6 +236,7 @@ export class GameScene extends Phaser.Scene {
   snapPlayerToGroundIfNeeded() {
     const body = this.player?.body;
     if (!body || !this.roomCollisionLayer) return;
+    if (this._disableGroundSnap) return;
     const grounded = Boolean(body.touching.down || body.blocked.down);
     this._groundedFrames = grounded ? this._groundedFrames + 1 : 0;
     if (!grounded) return;
