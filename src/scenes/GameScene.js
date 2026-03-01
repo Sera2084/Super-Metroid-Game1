@@ -593,6 +593,24 @@ export class GameScene extends Phaser.Scene {
     this.setWorldHitbox(this.player, this.playerHitboxStandW, this.playerHitboxStandH);
   }
 
+  canStandUpFromCrouch() {
+    const body = this.player?.body;
+    const layer = this.roomCollisionLayer;
+    if (!body || !layer) return true;
+
+    const desiredTopY = body.bottom - this.playerHitboxStandH;
+    const probeY = desiredTopY + 2;
+    const probeXs = [body.left + 2, body.center.x, body.right - 2];
+
+    for (const x of probeXs) {
+      const tile = layer.getTileAtWorldXY(x, probeY, true);
+      if (tile && tile.collides) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   tryShoot() {
     const now = this.time.now;
     if (this.lastShotAt && now < this.lastShotAt + 150) return;
@@ -707,7 +725,15 @@ export class GameScene extends Phaser.Scene {
     if (!this.playerState.isCrouching && grounded && crouchDownPressed) {
       this.enterCrouch();
     } else if (this.playerState.isCrouching && crouchUpPressed) {
-      this.exitCrouch();
+      if (this.canStandUpFromCrouch()) {
+        this.exitCrouch();
+      }
+    }
+
+    if (this.playerState.isCrouching && grounded && moveX !== 0) {
+      if (this.canStandUpFromCrouch()) {
+        this.exitCrouch();
+      }
     }
 
     if (this.playerState.isCrouching) {
@@ -731,9 +757,11 @@ export class GameScene extends Phaser.Scene {
       this.isJumpJustDown();
     this._jumpJustPressed = jumpPressed;
     if (jumpPressed && this.playerState.isCrouching) {
-      this.exitCrouch();
+      if (this.canStandUpFromCrouch()) {
+        this.exitCrouch();
+      }
     }
-    if (jumpPressed && body.blocked.down) {
+    if (jumpPressed && body.blocked.down && !this.playerState.isCrouching) {
       this.player.setVelocityY(-340);
     }
 
