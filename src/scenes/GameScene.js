@@ -541,12 +541,12 @@ export class GameScene extends Phaser.Scene {
 
     const lines = [
       `JITTER HUD (F3)  ${likely}`,
-      `P: x=${px.toFixed(2)} y=${py.toFixed(2)}  jumpJust=${Boolean(this._jumpJustPressed)} gf=${this._groundedFrames ?? 0}`,
+      `P: x=${px.toFixed(2)} y=${py.toFixed(3)} (rnd=${Math.round(py)})  jumpJust=${Boolean(this._jumpJustPressed)} gf=${this._groundedFrames ?? 0}`,
       `B: x=${bx.toFixed(2)} y=${by.toFixed(2)} bottom=${bbot.toFixed(2)} vx=${vx.toFixed(2)} vy=${vy.toFixed(2)}`,
       `Down: blocked=${blockedDown} touching=${touchingDown}  tileTop=${tileTop ?? 'n/a'} dTop=${deltaToTop == null ? 'n/a' : deltaToTop.toFixed(3)}`,
       `Cam: sx=${cam.scrollX.toFixed(3)} sy=${cam.scrollY.toFixed(3)} zoom=${zoom.toFixed(2)} view=(${cam.worldView.x.toFixed(3)},${cam.worldView.y.toFixed(3)})`,
       `Bounds: x=${b?.x?.toFixed?.(2) ?? 'n/a'} y=${b?.y?.toFixed?.(2) ?? 'n/a'} r=${b?.right?.toFixed?.(2) ?? 'n/a'} b=${b?.bottom?.toFixed?.(2) ?? 'n/a'}`,
-      `Clamp: bottom=${clampedBottom} (maxSY=${Number.isFinite(maxScrollY) ? maxScrollY.toFixed(3) : 'n/a'}) right=${clampedRight} (maxSX=${Number.isFinite(maxScrollX) ? maxScrollX.toFixed(3) : 'n/a'})`
+      `CLAMPED_BOTTOM: ${clampedBottom} (maxSY=${Number.isFinite(maxScrollY) ? maxScrollY.toFixed(3) : 'n/a'})  right=${clampedRight} (maxSX=${Number.isFinite(maxScrollX) ? maxScrollX.toFixed(3) : 'n/a'})`
     ];
     this._jitterHudText?.setText(lines.join('\n'));
   }
