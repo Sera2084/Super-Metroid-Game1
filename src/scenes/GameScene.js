@@ -643,14 +643,18 @@ export class GameScene extends Phaser.Scene {
   }
 
   getShotSpawnOffset(body, dir) {
-    const BULLET_Y_FRACTION_STAND = 0.55;
-    const CROUCH_Y_EXTRA = 14;
     const pad = 6;
     const spawnX = dir > 0 ? body.right + pad : body.left - pad;
-    let spawnY = body.top + body.height * BULLET_Y_FRACTION_STAND;
-    if (this.playerState?.isCrouching) {
-      spawnY += CROUCH_Y_EXTRA;
-    }
+
+    const STAND_FRAC = 0.55;
+    const CROUCH_FRAC = 0.5;
+    const frac = this.playerState?.isCrouching ? CROUCH_FRAC : STAND_FRAC;
+    let spawnY = body.top + body.height * frac;
+
+    const minY = body.top + 4;
+    const maxY = body.bottom - 6;
+    spawnY = Phaser.Math.Clamp(spawnY, minY, maxY);
+
     return { spawnX, spawnY };
   }
 
