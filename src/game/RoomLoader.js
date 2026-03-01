@@ -72,8 +72,11 @@ export class RoomLoader {
     this.scene.roomTilemap = tilemap;
     this.scene.roomCollisionLayer = collisionLayer;
 
-    this.scene.physics.world.setBounds(0, 0, room.width * TILE_SIZE, room.height * TILE_SIZE);
-    this.scene.cameras.main.setBounds(0, 0, room.width * TILE_SIZE, room.height * TILE_SIZE);
+    const worldW = room.width * TILE_SIZE;
+    const worldH = room.height * TILE_SIZE;
+    const BOTTOM_PADDING = 128;
+    this.scene.physics.world.setBounds(0, 0, worldW, worldH + BOTTOM_PADDING);
+    this.scene.cameras.main.setBounds(0, 0, worldW, worldH);
 
     const spawn = room.spawnPoints[spawnId] ?? room.spawnPoints.start;
     const spawnPx = {
