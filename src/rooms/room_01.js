@@ -6,6 +6,8 @@ const collisionGrid = createGrid(width, height);
 fillGround(collisionGrid, 3);
 addPlatform(collisionGrid, 15, 5, 14);
 addPlatform(collisionGrid, 12, 18, 28);
+addPlatform(collisionGrid, 8, 24, 34);
+addPlatform(collisionGrid, 4, 22, 30);
 addWall(collisionGrid, 0, 10, 21);
 addWall(collisionGrid, width - 1, 8, 21);
 
