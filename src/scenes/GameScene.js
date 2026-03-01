@@ -274,6 +274,8 @@ export class GameScene extends Phaser.Scene {
   snapPlayerToGroundIfNeeded() {
     const body = this.player?.body;
     if (!body || !this.roomCollisionLayer) return;
+    // TEMP: disable ground snap; camera jitter fix is primary.
+    return;
     if (this._disableGroundSnap) return;
     const grounded = Boolean(body.touching.down || body.blocked.down);
     this._groundedFrames = grounded ? this._groundedFrames + 1 : 0;
