@@ -248,40 +248,12 @@ export class GameScene extends Phaser.Scene {
     const zoom = cam.zoom || 1;
     const viewW = cam.width / zoom;
     const viewH = cam.height / zoom;
-
     const roomW = this._roomWorldW ?? (cam.getBounds?.()?.width ?? cam._bounds?.width ?? viewW);
     const roomH = this._roomWorldH ?? (cam.getBounds?.()?.height ?? cam._bounds?.height ?? viewH);
-
-    const minX = 0;
-    const minY = 0;
-    const maxX = Math.max(0, roomW - viewW);
-    const maxY = Math.max(0, roomH - viewH);
-
-    const marginLeft = Math.round(viewW * 0.35);
-    const marginRight = Math.round(viewW * 0.35);
-    const marginTop = Math.round(viewH * 0.35);
-    const marginBottom = Math.round(viewH * 0.2);
-
-    let sx = cam.scrollX;
-    let sy = cam.scrollY;
-
-    const leftEdge = sx + marginLeft;
-    const rightEdge = sx + (viewW - marginRight);
-    const topEdge = sy + marginTop;
-    const bottomEdge = sy + (viewH - marginBottom);
-
-    if (target.x < leftEdge) sx = target.x - marginLeft;
-    else if (target.x > rightEdge) sx = target.x - (viewW - marginRight);
-
-    if (target.y < topEdge) sy = target.y - marginTop;
-    else if (target.y > bottomEdge) sy = target.y - (viewH - marginBottom);
-
-    sx = Phaser.Math.Clamp(sx, minX, maxX);
-    sy = Phaser.Math.Clamp(sy, minY, maxY);
-
-    sx = Math.round(sx);
-    sy = Math.round(sy);
-
+    const desiredX = target.x - viewW * 0.5;
+    const desiredY = target.y - viewH * 0.6;
+    const sx = Math.round(Phaser.Math.Clamp(desiredX, 0, Math.max(0, roomW - viewW)));
+    const sy = Math.round(Phaser.Math.Clamp(desiredY, 0, Math.max(0, roomH - viewH)));
     cam.setScroll(sx, sy);
   }
 
