@@ -27,6 +27,7 @@ export class GameScene extends Phaser.Scene {
       facing: 1
     };
     this._jumpJustPressed = false;
+    this._groundedFrames = 0;
   }
 
   create() {
@@ -187,7 +188,7 @@ export class GameScene extends Phaser.Scene {
       const tileDelta = tileTop == null ? 'n/a' : (tileTop - bodyBottom).toFixed(2);
       // eslint-disable-next-line no-console
       console.log(
-        `[${label}] x=${sprite.x.toFixed(2)} y=${sprite.y.toFixed(2)} body=(${sprite.body.x.toFixed(2)},${sprite.body.y.toFixed(2)}) bodyBottom=${bodyBottom.toFixed(2)} spriteBottom=${spriteBottom.toFixed(2)} deltaSB=${(spriteBottom - bodyBottom).toFixed(2)} tileTop=${tileTop} tileDelta=${tileDelta}`
+        `[${label}] x=${sprite.x.toFixed(2)} y=${sprite.y.toFixed(2)} body=(${sprite.body.x.toFixed(2)},${sprite.body.y.toFixed(2)}) down=${Boolean(sprite.body.blocked.down)} touchingDown=${Boolean(sprite.body.touching.down)} vy=${sprite.body.velocity.y.toFixed(2)} bodyBottom=${bodyBottom.toFixed(2)} spriteBottom=${spriteBottom.toFixed(2)} deltaSB=${(spriteBottom - bodyBottom).toFixed(2)} tileTop=${tileTop} tileDelta=${tileDelta}`
       );
     };
     debugOne('PLAYER', this.player);
@@ -221,9 +222,15 @@ export class GameScene extends Phaser.Scene {
   snapPlayerToGroundIfNeeded() {
     const body = this.player?.body;
     if (!body || !this.roomCollisionLayer) return;
-    if (!body.blocked.down) return;
-    if (this._jumpJustPressed) return;
-    if (body.velocity.y < -1) return;
+    const grounded = Boolean(body.touching.down || body.blocked.down);
+    this._groundedFrames = grounded ? this._groundedFrames + 1 : 0;
+    if (!grounded) return;
+    if (this._jumpJustPressed || body.velocity.y < -1) return;
+
+    // Stabilize only right after landing (or rare vertical corrections), not every grounded frame.
+    const landingFrame = this._groundedFrames === 1;
+    const shouldSnap = landingFrame || Math.abs(body.velocity.y) > 0.5;
+    if (!shouldSnap) return;
 
     const tile = this.roomCollisionLayer.getTileAtWorldXY(body.center.x, body.bottom + 1, true);
     if (!tile || !tile.collides) return;
@@ -232,8 +239,12 @@ export class GameScene extends Phaser.Scene {
     const delta = tileTop - body.bottom;
     if (Math.abs(delta) < 0.1 || Math.abs(delta) > 1.5) return;
 
-    this.player.y += delta;
-    body.position.y += delta;
+    this.player.y = Math.round(this.player.y + delta);
+    if (typeof body.updateFromGameObject === 'function') {
+      body.updateFromGameObject();
+    } else {
+      body.position.y += delta;
+    }
     body.velocity.y = 0;
   }
 
