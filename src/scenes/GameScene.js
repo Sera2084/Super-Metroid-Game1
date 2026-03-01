@@ -487,7 +487,7 @@ export class GameScene extends Phaser.Scene {
     if (!body) {
       return { x: player.x + dir * 12, y: player.y - 10 };
     }
-    const BULLET_Y_FRACTION = 0.65;
+    const BULLET_Y_FRACTION = 0.55;
     const pad = 6;
     const spawnX = dir > 0 ? body.right + pad : body.left - pad;
     const spawnY = body.top + body.height * BULLET_Y_FRACTION;
