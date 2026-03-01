@@ -29,6 +29,9 @@ export class GameScene extends Phaser.Scene {
     this._jumpJustPressed = false;
     this._groundedFrames = 0;
     this._disableGroundSnap = false;
+    this._debugJitter = false;
+    this._jitterHudAt = 0;
+    this._jitterLast = null;
   }
 
   create() {
@@ -60,6 +63,10 @@ export class GameScene extends Phaser.Scene {
     this.bulletsList = [];
 
     this.createHud();
+    this._jitterHudText = this.add
+      .text(16, 248, '', { fontFamily: 'monospace', fontSize: '11px', color: '#ffffff' })
+      .setScrollFactor(0)
+      .setVisible(false);
     this.installErrorReporting();
 
     const gamepadPlugin = this.input.gamepad;
@@ -97,11 +104,17 @@ export class GameScene extends Phaser.Scene {
     this.onF2ToggleDebug = () => {
       this.setPhysicsDebugEnabled(!this._debugPhysics);
     };
-    this.onF3ToggleSnapDebug = () => {
+    this.onF3ToggleJitter = () => {
+      this._debugJitter = !this._debugJitter;
+      this._jitterHudText?.setVisible(this._debugJitter);
+      if (this._debugJitter) this.updateJitterHud(true);
+    };
+    this.onF4ToggleSnapDebug = () => {
       this._disableGroundSnap = !this._disableGroundSnap;
     };
     this.input.keyboard?.on('keydown-F2', this.onF2ToggleDebug);
-    this.input.keyboard?.on('keydown-F3', this.onF3ToggleSnapDebug);
+    this.input.keyboard?.on('keydown-F3', this.onF3ToggleJitter);
+    this.input.keyboard?.on('keydown-F4', this.onF4ToggleSnapDebug);
 
     this.applyGameStateToPlayer();
     this.updateHud();
@@ -109,11 +122,14 @@ export class GameScene extends Phaser.Scene {
       this.scale.off('resize', this.updateCameraZoomToFit, this);
       this.gamepadPollEvent?.remove(false);
       this.input.keyboard?.off('keydown-F2', this.onF2ToggleDebug);
-      this.input.keyboard?.off('keydown-F3', this.onF3ToggleSnapDebug);
+      this.input.keyboard?.off('keydown-F3', this.onF3ToggleJitter);
+      this.input.keyboard?.off('keydown-F4', this.onF4ToggleSnapDebug);
       this._tileDebugGraphic?.destroy();
       this._tileDebugGraphic = null;
       this._spriteDebugGraphic?.destroy();
       this._spriteDebugGraphic = null;
+      this._jitterHudText?.destroy();
+      this._jitterHudText = null;
       if (typeof window !== 'undefined') {
         if (this.onWindowError) window.removeEventListener('error', this.onWindowError);
         if (this.onUnhandledRejection) window.removeEventListener('unhandledrejection', this.onUnhandledRejection);
@@ -474,6 +490,67 @@ export class GameScene extends Phaser.Scene {
     this.gamepadLiveText?.setText(`PadLive: btn=${this.lastPressedButtonIndex}`);
   }
 
+  updateJitterHud(force = false) {
+    if (!this._debugJitter) return;
+    const now = this.time.now;
+    if (!force && now - (this._jitterHudAt ?? 0) < 100) return;
+    this._jitterHudAt = now;
+
+    const p = this.player;
+    const body = p?.body;
+    const cam = this.cameras.main;
+    const b = cam?.getBounds?.() ?? cam?._bounds;
+
+    const px = p?.x ?? 0;
+    const py = p?.y ?? 0;
+    const bx = body?.x ?? 0;
+    const by = body?.y ?? 0;
+    const bbot = body?.bottom ?? 0;
+    const vx = body?.velocity?.x ?? 0;
+    const vy = body?.velocity?.y ?? 0;
+    const blockedDown = Boolean(body?.blocked?.down);
+    const touchingDown = Boolean(body?.touching?.down);
+
+    let tileTop = null;
+    let deltaToTop = null;
+    if (this.roomCollisionLayer && body) {
+      const tile = this.roomCollisionLayer.getTileAtWorldXY(body.center.x, bbot + 1, true);
+      if (tile && tile.collides) {
+        tileTop = tile.pixelY;
+        deltaToTop = tileTop - bbot;
+      }
+    }
+
+    const zoom = cam?.zoom ?? 1;
+    const maxScrollY = b ? b.bottom - cam.height / zoom : Number.NaN;
+    const maxScrollX = b ? b.right - cam.width / zoom : Number.NaN;
+    const clampedBottom = Number.isFinite(maxScrollY) ? cam.scrollY >= maxScrollY - 0.01 : false;
+    const clampedRight = Number.isFinite(maxScrollX) ? cam.scrollX >= maxScrollX - 0.01 : false;
+
+    const last = this._jitterLast ?? null;
+    let likely = 'n/a';
+    if (last) {
+      const bodyDelta = Math.abs(bbot - last.bbot);
+      const camDelta = Math.abs(cam.scrollY - last.scrollY);
+      if (bodyDelta < 0.01 && camDelta >= 0.5) likely = 'LIKELY CAMERA JITTER';
+      else if (camDelta < 0.01 && bodyDelta >= 0.5) likely = 'LIKELY PHYSICS JITTER';
+      else if (camDelta >= 0.5 && bodyDelta >= 0.5) likely = 'MIXED/ROUNDING';
+      else likely = 'STABLE';
+    }
+    this._jitterLast = { bbot, scrollY: cam?.scrollY ?? 0 };
+
+    const lines = [
+      `JITTER HUD (F3)  ${likely}`,
+      `P: x=${px.toFixed(2)} y=${py.toFixed(2)}  jumpJust=${Boolean(this._jumpJustPressed)} gf=${this._groundedFrames ?? 0}`,
+      `B: x=${bx.toFixed(2)} y=${by.toFixed(2)} bottom=${bbot.toFixed(2)} vx=${vx.toFixed(2)} vy=${vy.toFixed(2)}`,
+      `Down: blocked=${blockedDown} touching=${touchingDown}  tileTop=${tileTop ?? 'n/a'} dTop=${deltaToTop == null ? 'n/a' : deltaToTop.toFixed(3)}`,
+      `Cam: sx=${cam.scrollX.toFixed(3)} sy=${cam.scrollY.toFixed(3)} zoom=${zoom.toFixed(2)} view=(${cam.worldView.x.toFixed(3)},${cam.worldView.y.toFixed(3)})`,
+      `Bounds: x=${b?.x?.toFixed?.(2) ?? 'n/a'} y=${b?.y?.toFixed?.(2) ?? 'n/a'} r=${b?.right?.toFixed?.(2) ?? 'n/a'} b=${b?.bottom?.toFixed?.(2) ?? 'n/a'}`,
+      `Clamp: bottom=${clampedBottom} (maxSY=${Number.isFinite(maxScrollY) ? maxScrollY.toFixed(3) : 'n/a'}) right=${clampedRight} (maxSX=${Number.isFinite(maxScrollX) ? maxScrollX.toFixed(3) : 'n/a'})`
+    ];
+    this._jitterHudText?.setText(lines.join('\n'));
+  }
+
   /**
    * Factory-Methode für RoomLoader, damit Enemy-Erzeugung an der Scene bleibt.
    */
@@ -686,6 +763,7 @@ export class GameScene extends Phaser.Scene {
         this.lastErrorText?.setText('LastError: none');
       }
       this.updatePixelCamera();
+      this.updateJitterHud();
     } catch (error) {
       this.reportError(error);
       return;
