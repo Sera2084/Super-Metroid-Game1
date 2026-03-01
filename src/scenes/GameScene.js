@@ -246,19 +246,43 @@ export class GameScene extends Phaser.Scene {
     const target = this.player;
     if (!cam || !target) return;
     const zoom = cam.zoom || 1;
-    const halfW = cam.width / (2 * zoom);
-    const halfH = cam.height / (2 * zoom);
-    const desiredX = target.x - halfW;
-    const desiredY = target.y - halfH;
-    const bounds = cam.getBounds?.() ?? cam._bounds;
-    if (!bounds) return;
-    const maxX = bounds.right - cam.width / zoom;
-    const maxY = bounds.bottom - cam.height / zoom;
-    const clampedX = Phaser.Math.Clamp(desiredX, bounds.x, maxX);
-    const clampedY = Phaser.Math.Clamp(desiredY, bounds.y, maxY);
-    const scrollX = Math.floor(clampedX + 0.00001);
-    const scrollY = Math.floor(clampedY + 0.00001);
-    cam.setScroll(scrollX, scrollY);
+    const viewW = cam.width / zoom;
+    const viewH = cam.height / zoom;
+
+    const roomW = this._roomWorldW ?? (cam.getBounds?.()?.width ?? cam._bounds?.width ?? viewW);
+    const roomH = this._roomWorldH ?? (cam.getBounds?.()?.height ?? cam._bounds?.height ?? viewH);
+
+    const minX = 0;
+    const minY = 0;
+    const maxX = Math.max(0, roomW - viewW);
+    const maxY = Math.max(0, roomH - viewH);
+
+    const marginLeft = Math.round(viewW * 0.35);
+    const marginRight = Math.round(viewW * 0.35);
+    const marginTop = Math.round(viewH * 0.35);
+    const marginBottom = Math.round(viewH * 0.2);
+
+    let sx = cam.scrollX;
+    let sy = cam.scrollY;
+
+    const leftEdge = sx + marginLeft;
+    const rightEdge = sx + (viewW - marginRight);
+    const topEdge = sy + marginTop;
+    const bottomEdge = sy + (viewH - marginBottom);
+
+    if (target.x < leftEdge) sx = target.x - marginLeft;
+    else if (target.x > rightEdge) sx = target.x - (viewW - marginRight);
+
+    if (target.y < topEdge) sy = target.y - marginTop;
+    else if (target.y > bottomEdge) sy = target.y - (viewH - marginBottom);
+
+    sx = Phaser.Math.Clamp(sx, minX, maxX);
+    sy = Phaser.Math.Clamp(sy, minY, maxY);
+
+    sx = Math.round(sx);
+    sy = Math.round(sy);
+
+    cam.setScroll(sx, sy);
   }
 
   refreshPlayerTileCollider() {
