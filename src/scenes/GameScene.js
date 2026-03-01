@@ -638,11 +638,20 @@ export class GameScene extends Phaser.Scene {
     if (!body) {
       return { x: player.x + dir * 12, y: player.y - 10 };
     }
-    const BULLET_Y_FRACTION = this.playerState?.isCrouching ? 0.45 : 0.55;
+    const { spawnX, spawnY } = this.getShotSpawnOffset(body, dir);
+    return { x: Math.round(spawnX), y: Math.round(spawnY) };
+  }
+
+  getShotSpawnOffset(body, dir) {
+    const BULLET_Y_FRACTION_STAND = 0.55;
+    const CROUCH_Y_EXTRA = 14;
     const pad = 6;
     const spawnX = dir > 0 ? body.right + pad : body.left - pad;
-    const spawnY = body.top + body.height * BULLET_Y_FRACTION;
-    return { x: Math.round(spawnX), y: Math.round(spawnY) };
+    let spawnY = body.top + body.height * BULLET_Y_FRACTION_STAND;
+    if (this.playerState?.isCrouching) {
+      spawnY += CROUCH_Y_EXTRA;
+    }
+    return { spawnX, spawnY };
   }
 
   damagePlayer(amount) {
