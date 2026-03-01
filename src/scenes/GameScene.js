@@ -87,9 +87,10 @@ export class GameScene extends Phaser.Scene {
     this.roomLoader.loadRoom('room_01', 'start');
     this.updateCameraZoomToFit();
     this.cameras.main.centerOn(this.player.x, this.player.y);
-    this.cameras.main.startFollow(this.player, true, 1, 1);
+    this.cameras.main.startFollow(this.player, true, 0, 0);
     this.cameras.main.roundPixels = true;
     this.cameras.main.setRoundPixels(true);
+    if (this.physics?.world) this.physics.world.roundPixels = true;
     this.scale.on('resize', this.updateCameraZoomToFit, this);
     this.onF2ToggleDebug = () => {
       this.setPhysicsDebugEnabled(!this._debugPhysics);
