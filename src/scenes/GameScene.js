@@ -43,7 +43,7 @@ export class GameScene extends Phaser.Scene {
     });
 
     // Player wird zentral erzeugt und in jedem Raum nur repositioniert.
-    this.player = this.physics.add.sprite(64, 64, 'player', 1);
+    this.player = this.physics.add.sprite(64, 64, 'player_v2', 1);
     this.player.setOrigin(0.5, 1);
     this.player.setScale(0.07);
     this.setWorldHitbox(this.player, 26, 44);

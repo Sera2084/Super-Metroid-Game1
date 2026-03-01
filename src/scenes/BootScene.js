@@ -8,11 +8,7 @@ export class BootScene extends Phaser.Scene {
   preload() {
     const base = import.meta.env.BASE_URL;
 
-    this.load.spritesheet(
-      'player',
-      `${base}assets/sprites/player_pair.png`,
-      { frameWidth: 768, frameHeight: 1024 }
-    );
+    this.load.image('player_v2_img', `${base}assets/sprites/player_pair.png`);
     this.load.image('enemy1_img', `${base}assets/sprites/enemy1.png`);
 
     this.load.spritesheet(
@@ -23,6 +19,19 @@ export class BootScene extends Phaser.Scene {
   }
 
   create() {
+    const playerTexture = this.textures.get('player_v2_img');
+    const playerImage = playerTexture?.getSourceImage?.();
+    if (!playerImage) {
+      throw new Error('player_v2_img konnte nicht geladen werden.');
+    }
+    const playerFrameWidth = Math.floor(playerImage.width / 2);
+    const playerFrameHeight = playerImage.height;
+    this.textures.addSpriteSheet('player_v2', playerImage, {
+      frameWidth: playerFrameWidth,
+      frameHeight: playerFrameHeight
+    });
+    this.textures.remove('player_v2_img');
+
     const enemyTexture = this.textures.get('enemy1_img');
     const enemyImage = enemyTexture?.getSourceImage?.();
     if (!enemyImage) {
