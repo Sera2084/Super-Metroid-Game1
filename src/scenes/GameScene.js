@@ -15,6 +15,8 @@ export class GameScene extends Phaser.Scene {
     this.gamepadButtons = {
       jump: 1,
       shoot: 3,
+      dpadUp: 12,
+      dpadDown: 13,
       dpadLeft: 14,
       dpadRight: 15
     };
@@ -24,7 +26,8 @@ export class GameScene extends Phaser.Scene {
       invulUntil: 0,
       dashUntil: 0,
       dashCooldownUntil: 0,
-      facing: 1
+      facing: 1,
+      isCrouching: false
     };
     this._jumpJustPressed = false;
     this._groundedFrames = 0;
@@ -660,16 +663,31 @@ export class GameScene extends Phaser.Scene {
     const gamepadMoveX = this.getMoveX();
     const moveXRaw = gamepadMoveX !== 0 ? gamepadMoveX : keyboardMoveX;
     const moveX = moveXRaw === 0 ? 0 : moveXRaw > 0 ? 1 : -1;
+    const grounded = Boolean(body.blocked.down || body.touching.down);
+    const crouchDownPressed =
+      Phaser.Input.Keyboard.JustDown(this.cursors.down) || this.isGamepadButtonJustPressed(this.gamepadButtons.dpadDown);
+    const crouchUpPressed =
+      Phaser.Input.Keyboard.JustDown(this.cursors.up) || this.isGamepadButtonJustPressed(this.gamepadButtons.dpadUp);
 
-    this.player.setVelocityX(Math.round(moveX * moveSpeed));
-    if (moveX < 0) {
-      this.playerState.facing = -1;
-      this.player.setFrame(0);
-      this.player.setFlipX(true);
-    } else if (moveX > 0) {
-      this.playerState.facing = 1;
-      this.player.setFrame(0);
-      this.player.setFlipX(false);
+    if (!this.playerState.isCrouching && grounded && crouchDownPressed) {
+      this.enterCrouch();
+    } else if (this.playerState.isCrouching && crouchUpPressed) {
+      this.exitCrouch();
+    }
+
+    if (this.playerState.isCrouching) {
+      this.player.setVelocityX(0);
+    } else {
+      this.player.setVelocityX(Math.round(moveX * moveSpeed));
+      if (moveX < 0) {
+        this.playerState.facing = -1;
+        this.player.setFrame(0);
+        this.player.setFlipX(true);
+      } else if (moveX > 0) {
+        this.playerState.facing = 1;
+        this.player.setFrame(0);
+        this.player.setFlipX(false);
+      }
     }
 
     const jumpPressed =
@@ -677,6 +695,9 @@ export class GameScene extends Phaser.Scene {
       Phaser.Input.Keyboard.JustDown(this.cursors.space) ||
       this.isJumpJustDown();
     this._jumpJustPressed = jumpPressed;
+    if (jumpPressed && this.playerState.isCrouching) {
+      this.exitCrouch();
+    }
     if (jumpPressed && body.blocked.down) {
       this.player.setVelocityY(-340);
     }
