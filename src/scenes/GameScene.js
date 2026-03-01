@@ -254,8 +254,10 @@ export class GameScene extends Phaser.Scene {
     if (!bounds) return;
     const maxX = bounds.right - cam.width / zoom;
     const maxY = bounds.bottom - cam.height / zoom;
-    const scrollX = Math.round(Phaser.Math.Clamp(desiredX, bounds.x, maxX));
-    const scrollY = Math.round(Phaser.Math.Clamp(desiredY, bounds.y, maxY));
+    const clampedX = Phaser.Math.Clamp(desiredX, bounds.x, maxX);
+    const clampedY = Phaser.Math.Clamp(desiredY, bounds.y, maxY);
+    const scrollX = Math.floor(clampedX + 0.00001);
+    const scrollY = Math.floor(clampedY + 0.00001);
     cam.setScroll(scrollX, scrollY);
   }
 
