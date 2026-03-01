@@ -92,7 +92,6 @@ export class GameScene extends Phaser.Scene {
     this.cameras.main.startFollow(this.player, true, 0, 0);
     this.cameras.main.roundPixels = true;
     this.cameras.main.setRoundPixels(true);
-    if (this.physics?.world) this.physics.world.roundPixels = true;
     this.scale.on('resize', this.updateCameraZoomToFit, this);
     this.onF2ToggleDebug = () => {
       this.setPhysicsDebugEnabled(!this._debugPhysics);
@@ -178,6 +177,15 @@ export class GameScene extends Phaser.Scene {
     const now = this.time.now;
     if (now - (this._lastGroundDebugAt ?? 0) < 200) return;
     this._lastGroundDebugAt = now;
+    const camera = this.cameras.main;
+    const camBounds = camera?.getBounds?.();
+    const maxScrollY =
+      camBounds && camera?.worldView ? camBounds.y + camBounds.height - camera.worldView.height : Number.NaN;
+    const isAtBottom = Number.isFinite(maxScrollY) ? Math.abs(camera.scrollY - maxScrollY) < 0.51 : false;
+    // eslint-disable-next-line no-console
+    console.log(
+      `[CAMERA] scrollY=${camera.scrollY.toFixed(2)} worldViewY=${camera.worldView.y.toFixed(2)} maxScrollY=${Number.isFinite(maxScrollY) ? maxScrollY.toFixed(2) : 'n/a'} atBottom=${isAtBottom}`
+    );
     const debugOne = (label, sprite) => {
       if (!sprite?.active || !sprite.body) return;
       const bounds = sprite.getBounds();
@@ -613,8 +621,6 @@ export class GameScene extends Phaser.Scene {
     try {
       this.handleMovement();
       this.snapPlayerToGroundIfNeeded();
-      this.cameras.main.scrollX = Math.round(this.cameras.main.scrollX);
-      this.cameras.main.scrollY = Math.round(this.cameras.main.scrollY);
       this.drawSpriteDebugBounds();
       this.debugGroundAlignment();
       this.captureLastPressedButton();
