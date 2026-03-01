@@ -90,9 +90,9 @@ export class GameScene extends Phaser.Scene {
     this.roomLoader.loadRoom('room_01', 'start');
     this.updateCameraZoomToFit();
     this.cameras.main.centerOn(this.player.x, this.player.y);
-    this.cameras.main.startFollow(this.player, true, 1, 1);
     this.cameras.main.roundPixels = true;
     this.cameras.main.setRoundPixels(true);
+    this.updatePixelCamera();
     this.scale.on('resize', this.updateCameraZoomToFit, this);
     this.onF2ToggleDebug = () => {
       this.setPhysicsDebugEnabled(!this._debugPhysics);
@@ -221,6 +221,24 @@ export class GameScene extends Phaser.Scene {
     const zoomY = Math.floor(visibleHeight / (TARGET_TILES_Y * TILE_SIZE));
     const nextZoom = Phaser.Math.Clamp(Math.min(zoomX, zoomY), 1, MAX_ZOOM);
     this.cameras.main.setZoom(nextZoom);
+  }
+
+  updatePixelCamera() {
+    const cam = this.cameras.main;
+    const target = this.player;
+    if (!cam || !target) return;
+    const zoom = cam.zoom || 1;
+    const halfW = cam.width / (2 * zoom);
+    const halfH = cam.height / (2 * zoom);
+    const desiredX = target.x - halfW;
+    const desiredY = target.y - halfH;
+    const bounds = cam.getBounds?.() ?? cam._bounds;
+    if (!bounds) return;
+    const maxX = bounds.right - cam.width / zoom;
+    const maxY = bounds.bottom - cam.height / zoom;
+    const scrollX = Math.round(Phaser.Math.Clamp(desiredX, bounds.x, maxX));
+    const scrollY = Math.round(Phaser.Math.Clamp(desiredY, bounds.y, maxY));
+    cam.setScroll(scrollX, scrollY);
   }
 
   refreshPlayerTileCollider() {
@@ -667,6 +685,7 @@ export class GameScene extends Phaser.Scene {
         this.lastErrorMessage = null;
         this.lastErrorText?.setText('LastError: none');
       }
+      this.updatePixelCamera();
     } catch (error) {
       this.reportError(error);
       return;
