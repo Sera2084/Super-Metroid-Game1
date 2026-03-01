@@ -187,6 +187,7 @@ export class RoomLoader {
 
     cam.once('camerafadeoutcomplete', () => {
       this.loadRoom(nextRoomId, spawnId);
+      this.scene.ensureCameraFollow?.(true);
       cam.fadeIn(180, 0, 0, 0);
       this.transitionLock = false;
     });

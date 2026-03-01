@@ -103,10 +103,7 @@ export class GameScene extends Phaser.Scene {
     this.roomLoader = new RoomLoader(this, getRoomById, this.gameState);
     this.roomLoader.loadRoom('room_01', 'start');
     this.updateCameraZoomToFit();
-    this.cameras.main.centerOn(this.player.x, this.player.y);
-    this.cameras.main.roundPixels = true;
-    this.cameras.main.setRoundPixels(true);
-    this.updatePixelCamera();
+    this.ensureCameraFollow(true);
     this.scale.on('resize', this.updateCameraZoomToFit, this);
     this.onF2ToggleDebug = () => {
       this.setPhysicsDebugEnabled(!this._debugPhysics);
@@ -246,6 +243,19 @@ export class GameScene extends Phaser.Scene {
     const zoomY = Math.floor(visibleHeight / (TARGET_TILES_Y * TILE_SIZE));
     const nextZoom = Phaser.Math.Clamp(Math.min(zoomX, zoomY), 1, MAX_ZOOM);
     this.cameras.main.setZoom(nextZoom);
+    this.ensureCameraFollow(true);
+  }
+
+  ensureCameraFollow(_force = false) {
+    const cam = this.cameras.main;
+    if (!cam || !this.player) return;
+    cam.roundPixels = true;
+    cam.setRoundPixels(true);
+    cam.startFollow(this.player, false, 0.12, 0.12);
+    const viewW = cam.width / cam.zoom;
+    const viewH = cam.height / cam.zoom;
+    cam.setDeadzone(Math.round(viewW * 0.35), Math.round(viewH * 0.25));
+    cam.setFollowOffset(0, Math.round(viewH * 0.1));
   }
 
   updatePixelCamera() {
@@ -851,7 +861,6 @@ export class GameScene extends Phaser.Scene {
         this.lastErrorMessage = null;
         this.lastErrorText?.setText('LastError: none');
       }
-      this.updatePixelCamera();
       this.updateJitterHud();
     } catch (error) {
       this.reportError(error);
