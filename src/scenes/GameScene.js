@@ -64,8 +64,9 @@ export class GameScene extends Phaser.Scene {
 
     this.createHud();
     this._jitterHudText = this.add
-      .text(16, 262, '', { fontFamily: 'monospace', fontSize: '11px', color: '#ffffff' })
+      .text(16, 170, '', { fontFamily: 'monospace', fontSize: '10px', color: '#ffffff' })
       .setScrollFactor(0)
+      .setDepth(100000)
       .setVisible(false);
     this.installErrorReporting();
 
@@ -270,31 +271,23 @@ export class GameScene extends Phaser.Scene {
   snapPlayerToGroundIfNeeded() {
     const body = this.player?.body;
     if (!body || !this.roomCollisionLayer) return;
-    // TEMP: disable ground snap; camera jitter fix is primary.
-    return;
     if (this._disableGroundSnap) return;
-    const grounded = Boolean(body.touching.down || body.blocked.down);
-    this._groundedFrames = grounded ? this._groundedFrames + 1 : 0;
+    const grounded = Boolean(body.blocked.down || body.touching.down);
     if (!grounded) return;
-    if (this._jumpJustPressed || body.velocity.y < -1) return;
-
-    // Stabilize only right after landing (or rare vertical corrections), not every grounded frame.
-    const landingFrame = this._groundedFrames === 1;
-    const shouldSnap = landingFrame || Math.abs(body.velocity.y) > 0.5;
-    if (!shouldSnap) return;
+    if (body.velocity.y < 0 || Math.abs(body.velocity.y) >= 5) return;
 
     const tile = this.roomCollisionLayer.getTileAtWorldXY(body.center.x, body.bottom + 1, true);
     if (!tile || !tile.collides) return;
 
     const tileTop = tile.pixelY;
     const delta = tileTop - body.bottom;
-    if (Math.abs(delta) < 0.1 || Math.abs(delta) > 1.5) return;
+    if (delta < -0.6 || delta > 0.6) return;
+    if (Math.abs(delta) < 0.001) return;
 
-    this.player.y = Math.round(this.player.y + delta);
+    this.player.y += delta;
+    this.player.y = Math.round(this.player.y);
     if (typeof body.updateFromGameObject === 'function') {
       body.updateFromGameObject();
-    } else {
-      body.position.y += delta;
     }
     body.velocity.y = 0;
   }
