@@ -243,12 +243,30 @@ export class GameScene extends Phaser.Scene {
     const zoomY = Math.floor(visibleHeight / (TARGET_TILES_Y * TILE_SIZE));
     const nextZoom = Phaser.Math.Clamp(Math.min(zoomX, zoomY), 1, MAX_ZOOM);
     this.cameras.main.setZoom(nextZoom);
+    this.applyRoomCameraBounds();
     this.ensureCameraFollow(true);
+  }
+
+  applyRoomCameraBounds() {
+    const cam = this.cameras.main;
+    if (!cam) return;
+    const zoom = cam.zoom || 1;
+    const viewH = cam.height / zoom;
+    const roomW = this._roomWorldW ?? cam.getBounds?.()?.width ?? cam._bounds?.width ?? cam.width;
+    const roomH = this._roomWorldH ?? cam.getBounds?.()?.height ?? cam._bounds?.height ?? cam.height;
+    if (roomH >= viewH) {
+      cam.setBounds(0, 0, roomW, roomH);
+      return;
+    }
+    const TOP_PAD = 128;
+    const bottomPad = Math.ceil(viewH - roomH);
+    cam.setBounds(0, -TOP_PAD, roomW, roomH + TOP_PAD + bottomPad);
   }
 
   ensureCameraFollow(_force = false) {
     const cam = this.cameras.main;
     if (!cam || !this.player) return;
+    this.applyRoomCameraBounds();
     cam.startFollow(this.player, true, 1, 1);
     cam.roundPixels = true;
     cam.setRoundPixels(true);
