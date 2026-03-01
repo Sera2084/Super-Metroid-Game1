@@ -64,7 +64,7 @@ export class GameScene extends Phaser.Scene {
 
     this.createHud();
     this._jitterHudText = this.add
-      .text(16, 248, '', { fontFamily: 'monospace', fontSize: '11px', color: '#ffffff' })
+      .text(16, 262, '', { fontFamily: 'monospace', fontSize: '11px', color: '#ffffff' })
       .setScrollFactor(0)
       .setVisible(false);
     this.installErrorReporting();
@@ -130,6 +130,8 @@ export class GameScene extends Phaser.Scene {
       this._spriteDebugGraphic = null;
       this._jitterHudText?.destroy();
       this._jitterHudText = null;
+      this.buildText?.destroy();
+      this.buildText = null;
       if (typeof window !== 'undefined') {
         if (this.onWindowError) window.removeEventListener('error', this.onWindowError);
         if (this.onUnhandledRejection) window.removeEventListener('unhandledrejection', this.onUnhandledRejection);
@@ -378,6 +380,16 @@ export class GameScene extends Phaser.Scene {
 
     this.shotsText = this.add
       .text(16, 228, 'Shots: 0', { fontFamily: 'monospace', fontSize: '11px', color: '#ffcf8a' })
+      .setScrollFactor(0);
+
+    const sha = typeof __GIT_SHA__ !== 'undefined' ? __GIT_SHA__ : 'unknown';
+    const buildTime = typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : 'unknown';
+    this.buildText = this.add
+      .text(16, 244, `Build: ${sha} | ${buildTime}`, {
+        fontFamily: 'monospace',
+        fontSize: '11px',
+        color: '#a8ffb0'
+      })
       .setScrollFactor(0);
   }
 
