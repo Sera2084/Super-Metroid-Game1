@@ -14,7 +14,7 @@ const config = {
       fps: 120,
       tileBias: 16,
       overlapBias: 8,
-      roundPixels: false
+      roundPixels: true
     }
   },
   input: {

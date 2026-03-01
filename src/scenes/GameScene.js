@@ -249,13 +249,13 @@ export class GameScene extends Phaser.Scene {
   ensureCameraFollow(_force = false) {
     const cam = this.cameras.main;
     if (!cam || !this.player) return;
+    cam.startFollow(this.player, true, 1, 1);
     cam.roundPixels = true;
     cam.setRoundPixels(true);
-    cam.startFollow(this.player, false, 0.12, 0.12);
     const viewW = cam.width / cam.zoom;
     const viewH = cam.height / cam.zoom;
-    cam.setDeadzone(Math.round(viewW * 0.35), Math.round(viewH * 0.25));
-    cam.setFollowOffset(0, Math.round(viewH * 0.1));
+    cam.setDeadzone(Math.round(viewW * 0.2), Math.round(viewH * 0.1));
+    cam.setFollowOffset(0, Math.round(-viewH * 0.1));
   }
 
   updatePixelCamera() {
