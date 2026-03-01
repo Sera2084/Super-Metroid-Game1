@@ -255,7 +255,7 @@ export class GameScene extends Phaser.Scene {
     const viewW = cam.width / cam.zoom;
     const viewH = cam.height / cam.zoom;
     cam.setDeadzone(Math.round(viewW * 0.2), Math.round(viewH * 0.1));
-    cam.setFollowOffset(0, Math.round(-viewH * 0.1));
+    cam.setFollowOffset(0, Math.round(viewH * 0.1));
   }
 
   updatePixelCamera() {
