@@ -9,6 +9,7 @@ export class BootScene extends Phaser.Scene {
     const base = import.meta.env.BASE_URL;
 
     this.load.image('player_v2_img', `${base}assets/sprites/player_pair.png`);
+    this.load.image('player_kneel_img', `${base}assets/sprites/player_pair_knieend.png`);
     this.load.image('enemy1_img', `${base}assets/sprites/enemy1.png`);
 
     this.load.spritesheet(
@@ -31,6 +32,19 @@ export class BootScene extends Phaser.Scene {
       frameHeight: playerFrameHeight
     });
     this.textures.remove('player_v2_img');
+
+    const playerKneelTexture = this.textures.get('player_kneel_img');
+    const playerKneelImage = playerKneelTexture?.getSourceImage?.();
+    if (!playerKneelImage) {
+      throw new Error('player_kneel_img konnte nicht geladen werden.');
+    }
+    const playerKneelFrameWidth = Math.floor(playerKneelImage.width / 2);
+    const playerKneelFrameHeight = playerKneelImage.height;
+    this.textures.addSpriteSheet('player_kneel', playerKneelImage, {
+      frameWidth: playerKneelFrameWidth,
+      frameHeight: playerKneelFrameHeight
+    });
+    this.textures.remove('player_kneel_img');
 
     const enemyTexture = this.textures.get('enemy1_img');
     const enemyImage = enemyTexture?.getSourceImage?.();
